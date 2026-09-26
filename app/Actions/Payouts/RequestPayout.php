@@ -43,7 +43,7 @@ class RequestPayout
                 ]);
             }
 
-            return $this->payouts->create([
+            $payout = $this->payouts->create([
                 'teacher_id' => $teacher->id,
                 'amount' => $amount,
                 'currency' => $currency,
@@ -51,6 +51,12 @@ class RequestPayout
                 'note' => $note,
                 'requested_at' => now(),
             ]);
+
+            $this->payouts->update($payout->id, [
+                'idempotency_key' => 'payout-'.$payout->id,
+            ], withoutGlobalScopes: true);
+
+            return $payout->refresh();
         });
     }
 }

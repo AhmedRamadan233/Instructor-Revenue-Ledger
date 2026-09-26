@@ -45,6 +45,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('subscriptions:expire')
             ->dailyAt('01:00')
             ->withoutOverlapping();
+
+        $schedule->command('payouts:process')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+
+        $schedule->command('payouts:process --reconcile')
+            ->everyTenMinutes()
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

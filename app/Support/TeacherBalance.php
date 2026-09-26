@@ -26,7 +26,10 @@ final class TeacherBalance
         $refunds = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Refund], true);
         $adjustments = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Adjustment], true);
         $paidOut = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Payout], true);
-        $reserved = $payouts->sum('amount', [...$base, 'status' => PayoutStatus::Pending], true);
+        $reserved = $payouts->sum('amount', [
+            ...$base,
+            'status' => [PayoutStatus::Pending, PayoutStatus::Processing],
+        ], true);
 
         return round($earned + $adjustments - $refunds - $paidOut - $reserved, 2);
     }

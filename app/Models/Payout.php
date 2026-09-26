@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[ScopedBy([BelongsToAuthenticatedTeacherScope::class])]
 #[Fillable([
     'teacher_id',
+    'idempotency_key',
     'amount',
     'currency',
     'status',
@@ -22,6 +23,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'requested_at',
     'processed_at',
     'processed_by_manager_id',
+    'provider_reference',
+    'provider_status',
+    'failure_reason',
+    'last_provider_checked_at',
 ])]
 class Payout extends Model
 {
@@ -35,6 +40,7 @@ class Payout extends Model
             'status' => PayoutStatus::class,
             'requested_at' => 'datetime',
             'processed_at' => 'datetime',
+            'last_provider_checked_at' => 'datetime',
         ];
     }
 
