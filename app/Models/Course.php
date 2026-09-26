@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[ScopedBy([CourseAccessScope::class])]
@@ -38,5 +39,11 @@ class Course extends Model
     public function consumptionSessions(): HasMany
     {
         return $this->hasMany(CourseConsumptionSession::class);
+    }
+
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'course_consumption_sessions')
+            ->distinct();
     }
 }

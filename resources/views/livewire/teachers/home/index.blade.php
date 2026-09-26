@@ -1,7 +1,7 @@
 <div>
     <div class="mb-4">
         <h1 class="h3 mb-1">Teacher Dashboard</h1>
-        <p class="text-muted mb-0">Overview of your courses and revenue.</p>
+        <p class="text-muted mb-0">Overview of your courses, students, and revenue.</p>
     </div>
 
     <div class="row g-3 mb-4">
@@ -12,6 +12,17 @@
                         <div class="text-muted small">Courses</div>
                         <div class="fs-3 fw-semibold text-dark">{{ $coursesCount }}</div>
                         <div class="small text-success">Manage →</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="{{ route('teacher.students') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-body">
+                        <div class="text-muted small">Students</div>
+                        <div class="fs-3 fw-semibold text-dark">{{ $studentsCount }}</div>
+                        <div class="small text-success">View →</div>
                     </div>
                 </div>
             </a>
@@ -31,21 +42,12 @@
             <a href="{{ route('teacher.ledger') }}" class="text-decoration-none">
                 <div class="card shadow-sm h-100 border-0">
                     <div class="card-body">
-                        <div class="text-muted small">Ledger Entries</div>
+                        <div class="text-muted small">Ledger</div>
                         <div class="fs-3 fw-semibold text-dark">{{ $ledgerCount }}</div>
-                        <div class="small text-success">View →</div>
+                        <div class="small text-muted">{{ number_format($totalAllocated, 2) }} allocated</div>
                     </div>
                 </div>
             </a>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card shadow-sm h-100 border-0">
-                <div class="card-body">
-                    <div class="text-muted small">Total Allocated</div>
-                    <div class="fs-3 fw-semibold">{{ number_format($totalAllocated, 2) }}</div>
-                    <div class="small text-muted">All periods</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -65,9 +67,12 @@
                                 <li class="list-group-item d-flex justify-content-between gap-2">
                                     <div>
                                         <div class="fw-semibold">{{ $course->title }}</div>
-                                        <div class="small text-muted">{{ \Illuminate\Support\Str::limit($course->description ?: 'No description.', 60) }}</div>
+                                        <div class="small text-muted">{{ $course->students_count }} students</div>
                                     </div>
-                                    <span class="badge text-bg-secondary align-self-start">{{ $course->status->name }}</span>
+                                    <div class="d-flex flex-column align-items-end gap-1">
+                                        <span class="badge text-bg-secondary">{{ $course->status->name }}</span>
+                                        <a href="{{ route('teacher.courses.students', $course) }}" class="small">Students</a>
+                                    </div>
                                 </li>
                             @endforeach
                         </ul>

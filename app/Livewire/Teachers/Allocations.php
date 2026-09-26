@@ -24,7 +24,7 @@ class Allocations extends __AbstractTeacherComponent
             'currency',
         ]);
 
-        return view('livewire.teachers.allocations', [
+        return view('livewire.teachers.allocations.index', [
             'allocations' => $query->paginate(10),
         ]);
     }

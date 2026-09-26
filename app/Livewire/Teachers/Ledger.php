@@ -41,7 +41,7 @@ class Ledger extends __AbstractTeacherComponent
             'currency',
         ]);
 
-        return view('livewire.teachers.ledger', [
+        return view('livewire.teachers.ledger.index', [
             'entries' => $query->paginate(10),
             'types' => LedgerEntryType::cases(),
         ]);
