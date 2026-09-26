@@ -1,58 +1,120 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Instructor Revenue Ledger
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Prepaid student subscriptions → real watch-time → monthly teacher revenue allocation → ledger → payouts (manual approval **and** mock payment provider + queued jobs).
 
-## About Laravel
+Challenge delivery docs:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — allocation, refund, idempotency, provider timeout, scale, limitations
+- [`docs/AI_USAGE.md`](docs/AI_USAGE.md) — how AI was used
+- [`STATUS.md`](STATUS.md) — done vs remaining vs Challenge brief
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Assumptions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Students pay the full plan up front (manual payment row; no real student PSP).
+2. Access is platform-wide for Published courses while the subscription is Active (not course-by-course SKUs).
+3. Teacher earnings are derived from `teacher_ledger_entries` + reserved payouts — not a `teachers.balance` column.
+4. A calendar month is closed once; re-run only via explicit **force** (demo).
+5. Mid-term **Refund** returns unused (not-yet-Processed) prepaid months; Processed months stay with platform/teachers.
+6. **Cancel** ends access with no cash back.
+7. Automated payouts use `MockPaymentProvider` (`PAYOUT_PROVIDER=mock`). Manager “Mark paid” remains for ops demos.
+8. UI is Livewire (not Filament yet). Tests are PHPUnit Feature tests (not Pest yet).
 
-## Learning Laravel
+## Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Piece | Version / choice |
+|-------|------------------|
+| PHP | 8.3+ |
+| Laravel | 13 |
+| Livewire | 4 |
+| DB | MySQL (Laragon) locally; SQLite in PHPUnit |
+| Front assets | Vite + Bootstrap (existing layouts) |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Configure DB in `.env`, then:
 
-## Contributing
+```bash
+php artisan migrate --seed
+npm install
+npm run build
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Serve (Laragon vhost or):
 
-## Code of Conduct
+```bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Optional queue worker (required for `payouts:process` jobs):
 
-## Security Vulnerabilities
+```bash
+php artisan queue:work
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Demo accounts (from seeder)
+
+Password for all: `password`
+
+| Role | Email |
+|------|-------|
+| Manager | `manager@example.com` |
+| Teacher | `teacher1@example.com` |
+| Student | `student1@example.com` |
+
+### Useful env
+
+```env
+PAYOUT_PROVIDER=mock
+# Optional: force mock outcome — succeeded | failed | timeout_after_success
+PAYOUT_MOCK_OUTCOME=
+```
+
+## Common flows
+
+1. Student → Plans → Subscribe → Watch courses  
+2. Manager → Revenue → Process month (or wait for `revenue:process`)  
+3. Teacher → Ledger / request payout  
+4. Either:
+   - Manager → Payouts → Mark paid, **or**
+   - `php artisan payouts:process` (+ queue worker) through the mock provider  
+5. Student → Subscriptions → **Refund** (partial prepaid) or **Cancel** (no refund)
+
+Scheduled (see `routes/console.php` / bootstrap schedule):
+
+- `subscriptions:expire` daily  
+- `revenue:process` monthly  
+
+## Tests
+
+```bash
+php artisan test --compact
+```
+
+Narrow examples:
+
+```bash
+php artisan test --compact tests/Feature/PayoutProviderFlowTest.php
+php artisan test --compact tests/Feature/RefundMidTermSubscriptionTest.php
+php artisan test --compact tests/Feature/MoneyFlowEndToEndTest.php
+```
+
+## Project map (short)
+
+| Path | Role |
+|------|------|
+| `app/Actions/…` | Business operations (subscribe, process month, payout, refund) |
+| `app/Payments/…` | Provider contract + mock |
+| `app/Jobs/ProcessPayoutJob.php` | Queued payout |
+| `app/Support/TeacherBalance.php` | Available / reserved balance |
+| `app/Livewire/…` | Manager / Teacher / Student UI |
+| `tests/Feature/…` | Money + failure coverage |
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT (Laravel base). Challenge submission documentation is in `docs/`.

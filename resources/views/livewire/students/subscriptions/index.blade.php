@@ -8,10 +8,10 @@
     </div>
 
     <div class="alert alert-warning border small mb-4">
-        <strong>قبل ما تلغي:</strong>
-        الإلغاء بيقفل الوصول فورًا ومفيش استرجاع.
-        مشاهدة الشهر الحالي لحد لحظة الإلغاء بتتحسب للمدرّسين، والشهور اللي بعده مش هيدخل فيها الاشتراك.
-        بعد الإلغاء تقدر تشترك من جديد من
+        <strong>Cancel مقابل Refund:</strong>
+        الإلغاء بيقفل الوصول فورًا ومفيش فلوس ترجع.
+        الاسترجاع الجزئي (Refund) بيرجّع نصيب الشهور اللي لسه ما اتقفلتش في تسوية الإيراد، ويسيب نصيب الشهور الـ Processed للمنصة والمدرّسين.
+        بعد الإلغاء أو الاسترجاع تقدر تشترك من جديد من
         <a href="{{ route('student.plans') }}" class="alert-link">الخطط</a>.
     </div>
 
@@ -66,14 +66,24 @@
                             <td>{{ optional($subscription->ends_at)->format('Y-m-d') ?? '—' }}</td>
                             <td class="text-end">
                                 @if ($subscription->status->value === \App\Enums\SubscriptionStatus::Active->value)
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        wire:click="cancel({{ $subscription->id }})"
-                                        wire:confirm="الإلغاء بيقفل الوصول فورًا ومفيش استرجاع. مشاهدة الشهر الحالي لحد دلوقتي هتتحسب، والشهور الجاية مش هتدخل. هل تريد الإلغاء؟"
-                                    >
-                                        Cancel
-                                    </button>
+                                    <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-warning"
+                                            wire:click="refund({{ $subscription->id }})"
+                                            wire:confirm="الاسترجاع الجزئي بيرجّع فلوس الشهور اللي لسه ما اتقفلتش في التسوية، ويقفل الوصول فورًا. الشهور الـ Processed مش هتتسحب من المدرّسين. هل تريد الاسترجاع؟"
+                                        >
+                                            Refund
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            wire:click="cancel({{ $subscription->id }})"
+                                            wire:confirm="الإلغاء بيقفل الوصول فورًا ومفيش استرجاع. مشاهدة الشهر الحالي لحد دلوقتي هتتحسب، والشهور الجاية مش هتدخل. هل تريد الإلغاء؟"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
                                 @else
                                     <span class="text-muted small">—</span>
                                 @endif

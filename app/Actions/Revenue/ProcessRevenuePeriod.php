@@ -106,7 +106,12 @@ class ProcessRevenuePeriod
             $teacherTotals = [];
 
             $subscriptions = $this->subscriptions->query(true)
-                ->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::Expired, SubscriptionStatus::Cancelled])
+                ->whereIn('status', [
+                    SubscriptionStatus::Active,
+                    SubscriptionStatus::Expired,
+                    SubscriptionStatus::Cancelled,
+                    SubscriptionStatus::Refunded,
+                ])
                 ->where('starts_at', '<=', $periodEnd)
                 ->where(function ($query) use ($periodStart): void {
                     $query->whereNull('ends_at')

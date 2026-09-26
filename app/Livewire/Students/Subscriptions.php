@@ -3,6 +3,7 @@
 namespace App\Livewire\Students;
 
 use App\Actions\Subscriptions\CancelSubscription;
+use App\Actions\Subscriptions\RefundMidTermSubscription;
 use App\Enums\SubscriptionStatus;
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Repo\InterFace\SubscriptionRepositoryInterface;
@@ -43,6 +44,23 @@ class Subscriptions extends __AbstractStudentComponent
         session()->flash(
             'success',
             'تم إلغاء الاشتراك. الوصول اتقفل من دلوقتي، ومفيش استرجاع. مشاهدة الشهر الحالي لحد الإلغاء هتتحسب في التسوية.'
+        );
+    }
+
+    public function refund(int $subscriptionId, RefundMidTermSubscription $action): void
+    {
+        $subscription = $this->subscriptions->getById($subscriptionId);
+        $result = $action->handle($subscription);
+
+        session()->flash(
+            'success',
+            sprintf(
+                'تم الاسترجاع الجزئي: %.2f %s (شهور مسترجَعة: %d من %d). الشهور اللي اتقفلت في التسوية اتبقت للمنصة والمدرّسين.',
+                $result['refund_amount'],
+                $result['subscription']->currency,
+                $result['refundable_months'],
+                $result['duration_months'],
+            )
         );
     }
 
