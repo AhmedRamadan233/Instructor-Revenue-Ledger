@@ -35,6 +35,30 @@
                     </li>
                     <li class="nav-item">
                         <a
+                            class="nav-link @if (request()->routeIs('dashboard.teachers')) active @endif"
+                            href="{{ route('dashboard.teachers') }}"
+                        >
+                            Teachers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            class="nav-link @if (request()->routeIs('dashboard.courses')) active @endif"
+                            href="{{ route('dashboard.courses') }}"
+                        >
+                            Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            class="nav-link @if (request()->routeIs('dashboard.plans')) active @endif"
+                            href="{{ route('dashboard.plans') }}"
+                        >
+                            Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
                             class="nav-link @if (request()->routeIs('dashboard.settings')) active @endif"
                             href="{{ route('dashboard.settings') }}"
                         >
@@ -61,6 +85,9 @@
     <main class="container py-4">
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         @isset($slot)

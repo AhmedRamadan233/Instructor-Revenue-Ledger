@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\Local\PlanScopes;
 use Database\Factories\PlanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,8 @@ class Plan extends Model
 {
     /** @use HasFactory<PlanFactory> */
     use HasFactory;
+
+    use PlanScopes;
 
     /**
      * @return array<string, string>

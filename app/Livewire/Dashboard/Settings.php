@@ -60,7 +60,7 @@ class Settings extends __AbstractManagerComponent
 
     public function render()
     {
-        return view('livewire.dashboard.settings', [
+        return view('livewire.dashboard.settings.index', [
             'settings' => Setting::query()->orderBy('key')->get(),
         ]);
     }

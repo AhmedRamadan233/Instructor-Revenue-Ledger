@@ -14,7 +14,7 @@ class Home extends __AbstractManagerComponent
 {
     public function render()
     {
-        return view('livewire.dashboard.home', [
+        return view('livewire.dashboard.home.index', [
             'studentsCount' => Student::query()->withoutGlobalScopes()->count(),
             'teachersCount' => Teacher::query()->withoutGlobalScopes()->count(),
             'plansCount' => Plan::query()->where('is_active', true)->count(),

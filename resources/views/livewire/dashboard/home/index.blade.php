@@ -6,7 +6,7 @@
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="text-muted small">Students</div>
                     <div class="fs-3 fw-semibold">{{ $studentsCount }}</div>
@@ -14,28 +14,37 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted small">Teachers</div>
-                    <div class="fs-3 fw-semibold">{{ $teachersCount }}</div>
+            <a href="{{ route('dashboard.teachers') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Teachers</div>
+                        <div class="fs-3 fw-semibold text-dark">{{ $teachersCount }}</div>
+                        <div class="small text-primary">Manage →</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted small">Active Plans</div>
-                    <div class="fs-3 fw-semibold">{{ $plansCount }}</div>
+            <a href="{{ route('dashboard.plans') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Active Plans</div>
+                        <div class="fs-3 fw-semibold text-dark">{{ $plansCount }}</div>
+                        <div class="small text-primary">Manage →</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted small">Courses</div>
-                    <div class="fs-3 fw-semibold">{{ $coursesCount }}</div>
+            <a href="{{ route('dashboard.courses') }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Courses</div>
+                        <div class="fs-3 fw-semibold text-dark">{{ $coursesCount }}</div>
+                        <div class="small text-primary">Manage →</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -59,7 +68,10 @@
 
         <div class="col-12 col-lg-7">
             <div class="card shadow-sm h-100">
-                <div class="card-header">Recent Courses</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Courses</span>
+                    <a href="{{ route('dashboard.courses') }}" class="btn btn-sm btn-outline-primary">View all</a>
+                </div>
                 <div class="card-body p-0">
                     @if ($recentCourses->isEmpty())
                         <p class="text-muted p-3 mb-0">No courses found.</p>

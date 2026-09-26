@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Scopes\Global\TeacherProfileScope;
+use App\Models\Scopes\Local\TeacherScopes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Teacher extends Model
 {
     use HasFactory;
+    use TeacherScopes;
 
     public function user(): BelongsTo
     {
