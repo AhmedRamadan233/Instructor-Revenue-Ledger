@@ -5,6 +5,7 @@ namespace App\Livewire\Dashboard;
 use App\Enums\PlanType;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
+use App\Livewire\Requests\Dashboard\PlanRequest;
 use App\Models\Plan;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
@@ -77,14 +78,7 @@ class Plans extends __AbstractManagerComponent
 
     public function save(): void
     {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'isActive' => ['boolean'],
-            'options' => ['required', 'array'],
-            'options.*.price' => ['required', 'numeric', 'min:0'],
-            'options.*.is_active' => ['boolean'],
-        ]);
+        $validated = $this->validate(PlanRequest::rules());
 
         $isEditing = $this->editingId !== null;
 

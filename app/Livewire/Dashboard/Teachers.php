@@ -4,11 +4,10 @@ namespace App\Livewire\Dashboard;
 
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
+use App\Livewire\Requests\Dashboard\TeacherRequest;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Title;
 use Throwable;
 
@@ -49,20 +48,10 @@ class Teachers extends __AbstractManagerComponent
             ? Teacher::query()->findOrFail($this->editingId)->user_id
             : null;
 
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
-            'password' => [
-                $this->editingId ? 'nullable' : 'required',
-                'string',
-                Password::defaults(),
-            ],
-        ]);
+        $validated = $this->validate(TeacherRequest::rules(
+            ignoreUserId: $userId,
+            passwordRequired: $this->editingId === null,
+        ));
 
         $isEditing = $this->editingId !== null;
 

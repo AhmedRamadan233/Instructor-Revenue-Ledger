@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Guests;
 
+use App\Livewire\Requests\Guests\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -18,10 +19,7 @@ class Login extends __AbstractGuestComponent
 
     public function login(): void
     {
-        $credentials = $this->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $credentials = $this->validate(LoginRequest::rules());
 
         if (! Auth::attempt($credentials, $this->remember)) {
             throw ValidationException::withMessages([

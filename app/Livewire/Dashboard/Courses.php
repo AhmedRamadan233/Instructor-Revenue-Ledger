@@ -5,9 +5,9 @@ namespace App\Livewire\Dashboard;
 use App\Enums\CourseStatus;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
+use App\Livewire\Requests\Dashboard\CourseRequest;
 use App\Models\Course;
 use App\Models\Teacher;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Throwable;
@@ -63,12 +63,7 @@ class Courses extends __AbstractManagerComponent
 
     public function save(): void
     {
-        $validated = $this->validate([
-            'teacherId' => ['required', 'integer', Rule::exists('teachers', 'id')],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'courseStatus' => ['required', Rule::enum(CourseStatus::class)],
-        ]);
+        $validated = $this->validate(CourseRequest::rules());
 
         $isEditing = $this->editingId !== null;
 

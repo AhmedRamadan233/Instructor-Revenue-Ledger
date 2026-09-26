@@ -5,9 +5,9 @@ namespace App\Livewire\Teachers;
 use App\Enums\CourseStatus;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
+use App\Livewire\Requests\Teachers\CourseRequest;
 use App\Models\Course;
 use App\Support\AuthActor;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Throwable;
@@ -64,11 +64,7 @@ class Courses extends __AbstractTeacherComponent
 
         abort_if($teacherId === null, 403);
 
-        $validated = $this->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'courseStatus' => ['required', Rule::enum(CourseStatus::class)],
-        ]);
+        $validated = $this->validate(CourseRequest::rules());
 
         $isEditing = $this->editingId !== null;
 

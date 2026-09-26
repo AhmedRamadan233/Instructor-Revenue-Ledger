@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Livewire\Requests\Dashboard\SettingRequest;
 use App\Models\Setting;
 use Livewire\Attributes\Title;
 
@@ -39,15 +40,10 @@ class Settings extends __AbstractManagerComponent
     {
         $setting = Setting::query()->findOrFail($this->editingId);
 
-        $this->validate([
-            'editingValue' => $setting->key === 'platform_revenue_percentage'
-                ? ['required', 'numeric', 'min:0', 'max:100']
-                : ['required', 'string', 'max:255'],
-        ], [
-            'editingValue.numeric' => 'Platform revenue percentage must be a number between 0 and 100.',
-            'editingValue.min' => 'Platform revenue percentage must be a number between 0 and 100.',
-            'editingValue.max' => 'Platform revenue percentage must be a number between 0 and 100.',
-        ]);
+        $this->validate(
+            SettingRequest::rules($setting->key),
+            SettingRequest::messages($setting->key),
+        );
 
         $setting->update([
             'value' => (string) $this->editingValue,
