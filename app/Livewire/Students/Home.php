@@ -12,7 +12,7 @@ class Home extends __AbstractStudentComponent
 {
     public function render()
     {
-        return view('livewire.students.home', [
+        return view('livewire.students.home.index', [
             'subscriptionsCount' => Subscription::query()->count(),
             'activeSubscriptionsCount' => Subscription::query()
                 ->status(SubscriptionStatus::Active)

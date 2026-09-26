@@ -59,6 +59,14 @@
                     </li>
                     <li class="nav-item">
                         <a
+                            class="nav-link @if (request()->routeIs('dashboard.revenue')) active @endif"
+                            href="{{ route('dashboard.revenue') }}"
+                        >
+                            Revenue
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
                             class="nav-link @if (request()->routeIs('dashboard.settings')) active @endif"
                             href="{{ route('dashboard.settings') }}"
                         >

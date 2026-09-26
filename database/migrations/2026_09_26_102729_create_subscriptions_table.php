@@ -26,6 +26,7 @@ return new class extends Migration
             $table->decimal('platform_percentage', 5, 2);
             $table->decimal('platform_amount', 12, 2);
             $table->decimal('teacher_pool_amount', 12, 2);
+            $table->decimal('pool_carry_amount', 12, 2)->default(0);
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
 

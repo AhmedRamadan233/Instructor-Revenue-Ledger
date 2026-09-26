@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Students;
 
+use App\Actions\Subscriptions\CancelSubscription;
 use App\Enums\SubscriptionStatus;
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Models\Subscription;
@@ -27,6 +28,17 @@ class Subscriptions extends __AbstractStudentComponent
         $this->resetPage();
     }
 
+    public function cancel(int $subscriptionId, CancelSubscription $action): void
+    {
+        $subscription = Subscription::query()->findOrFail($subscriptionId);
+        $action->handle($subscription);
+
+        session()->flash(
+            'success',
+            'تم إلغاء الاشتراك. الوصول اتقفل من دلوقتي، ومفيش استرجاع. مشاهدة الشهر الحالي لحد الإلغاء هتتحسب في التسوية.'
+        );
+    }
+
     public function render()
     {
         $query = Subscription::query()
@@ -42,7 +54,7 @@ class Subscriptions extends __AbstractStudentComponent
             'status',
         ]);
 
-        return view('livewire.students.subscriptions', [
+        return view('livewire.students.subscriptions.index', [
             'subscriptions' => $query->paginate(10),
             'statuses' => SubscriptionStatus::cases(),
         ]);

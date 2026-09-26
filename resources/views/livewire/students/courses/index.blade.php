@@ -2,7 +2,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
         <div>
             <h1 class="h3 mb-1">Courses</h1>
-            <p class="text-muted mb-0">Published courses available with your subscription access.</p>
+            <p class="text-muted mb-0">Published courses available with your active subscription. Open a course to see full details and your watch time.</p>
         </div>
     </div>
 
@@ -18,12 +18,8 @@
                         </th>
                         <th>Teacher</th>
                         <th>Description</th>
-                        <th>
-                            <x-table.sort-button column="created_at" label="Created" :sort-by="$sortBy" :sort-direction="$sortDirection" />
-                        </th>
-                        <th>
-                            <x-table.sort-button column="updated_at" label="Updated" :sort-by="$sortBy" :sort-direction="$sortDirection" />
-                        </th>
+                        <th>You watched</th>
+                        <th class="text-end" style="width: 140px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,8 +30,19 @@
                             <td class="text-muted small" style="max-width: 280px;">
                                 {{ \Illuminate\Support\Str::limit($course->description ?: 'No description.', 80) }}
                             </td>
-                            <td>{{ optional($course->created_at)->format('Y-m-d') }}</td>
-                            <td>{{ optional($course->updated_at)->format('Y-m-d') }}</td>
+                            <td>
+                                @php $watched = (int) ($course->watched_seconds ?? 0); @endphp
+                                @if ($watched > 0)
+                                    <span class="fw-semibold">{{ $watched }}s</span>
+                                @else
+                                    <span class="text-muted">Not watched</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('student.courses.watch', $course) }}" class="btn btn-sm btn-primary">
+                                    Details / Watch
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -49,9 +56,7 @@
         </div>
 
         @if ($courses->hasPages())
-            <div class="card-footer">
-                {{ $courses->links() }}
-            </div>
+            <div class="card-footer">{{ $courses->links() }}</div>
         @endif
     </div>
 </div>

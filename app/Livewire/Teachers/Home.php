@@ -4,6 +4,7 @@ namespace App\Livewire\Teachers;
 
 use App\Models\Course;
 use App\Models\RevenueAllocation;
+use App\Models\Setting;
 use App\Models\Student;
 use App\Models\TeacherLedgerEntry;
 use Livewire\Attributes\Title;
@@ -13,7 +14,14 @@ class Home extends __AbstractTeacherComponent
 {
     public function render()
     {
+        $platformPercentage = (float) (Setting::query()
+            ->withoutGlobalScopes()
+            ->where('key', 'platform_revenue_percentage')
+            ->value('value') ?? 20);
+
         return view('livewire.teachers.home.index', [
+            'platformPercentage' => $platformPercentage,
+            'teacherPoolPercentage' => max(0, 100 - $platformPercentage),
             'coursesCount' => Course::query()->count(),
             'studentsCount' => Student::query()->count(),
             'allocationsCount' => RevenueAllocation::query()->count(),

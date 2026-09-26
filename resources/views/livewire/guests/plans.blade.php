@@ -52,9 +52,21 @@
                                     {{ number_format((float) $option->price, 2) }}
                                     <span class="fs-6 text-muted">{{ $option->currency }}</span>
                                 </p>
-                                <span class="badge text-bg-primary align-self-start mt-auto">
-                                    Available to subscribe
-                                </span>
+                                @auth
+                                    @if (auth()->user()->is_student)
+                                        <a href="{{ route('student.plans') }}" class="btn btn-primary mt-auto align-self-start">
+                                            Subscribe as student
+                                        </a>
+                                    @else
+                                        <span class="badge text-bg-secondary align-self-start mt-auto">
+                                            Login as student to subscribe
+                                        </span>
+                                    @endif
+                                @else
+                                    <a href="{{ route('guest.login') }}" class="btn btn-outline-primary mt-auto align-self-start">
+                                        Login to subscribe
+                                    </a>
+                                @endauth
                             @else
                                 <p class="mb-1 text-muted small">Type: not available</p>
                                 <p class="mb-1 text-muted small">Duration: —</p>

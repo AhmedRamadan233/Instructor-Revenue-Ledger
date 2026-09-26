@@ -33,6 +33,7 @@ class SubscriptionFactory extends Factory
             'platform_percentage' => $platformPercentage,
             'platform_amount' => $platformAmount,
             'teacher_pool_amount' => $amount - $platformAmount,
+            'pool_carry_amount' => 0,
             'paid_at' => now(),
         ];
     }

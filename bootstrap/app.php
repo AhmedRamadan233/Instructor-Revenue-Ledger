@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureUserIs\EnsureUserIsGuest;
 use App\Http\Middleware\EnsureUserIs\EnsureUserIsManager;
 use App\Http\Middleware\EnsureUserIs\EnsureUserIsStudent;
 use App\Http\Middleware\EnsureUserIs\EnsureUserIsTeacher;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -36,6 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/guests.php'));
         },
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('revenue:process')
+            ->monthlyOn(1, '02:00')
+            ->withoutOverlapping();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'manager' => EnsureUserIsManager::class,

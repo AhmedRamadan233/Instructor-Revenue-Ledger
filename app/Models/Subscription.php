@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'platform_percentage',
     'platform_amount',
     'teacher_pool_amount',
+    'pool_carry_amount',
     'paid_at',
 ])]
 class Subscription extends Model
@@ -40,6 +41,7 @@ class Subscription extends Model
             'platform_percentage' => 'decimal:2',
             'platform_amount' => 'decimal:2',
             'teacher_pool_amount' => 'decimal:2',
+            'pool_carry_amount' => 'decimal:2',
             'paid_at' => 'datetime',
         ];
     }
