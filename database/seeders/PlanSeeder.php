@@ -13,39 +13,47 @@ class PlanSeeder extends Seeder
      */
     public function run(): void
     {
-        $plans = [
+        $catalog = [
             [
-                'name' => 'Monthly Plan',
-                'type' => PlanType::Monthly,
-                'price' => 100.00,
-                'duration_months' => PlanType::Monthly->durationMonths(),
+                'name' => 'Standard Access',
+                'description' => 'Access all published courses from every teacher on the platform.',
+                'options' => [
+                    PlanType::Monthly->value => 100.00,
+                    PlanType::Quarterly->value => 270.00,
+                    PlanType::HalfYearly->value => 500.00,
+                    PlanType::Yearly->value => 900.00,
+                ],
             ],
             [
-                'name' => 'Quarterly Plan',
-                'type' => PlanType::Quarterly,
-                'price' => 270.00,
-                'duration_months' => PlanType::Quarterly->durationMonths(),
-            ],
-            [
-                'name' => 'Half Yearly Plan',
-                'type' => PlanType::HalfYearly,
-                'price' => 500.00,
-                'duration_months' => PlanType::HalfYearly->durationMonths(),
-            ],
-            [
-                'name' => 'Yearly Plan',
-                'type' => PlanType::Yearly,
-                'price' => 900.00,
-                'duration_months' => PlanType::Yearly->durationMonths(),
+                'name' => 'Premium Access',
+                'description' => 'Everything in Standard, with priority support for students.',
+                'options' => [
+                    PlanType::Monthly->value => 150.00,
+                    PlanType::Quarterly->value => 400.00,
+                    PlanType::HalfYearly->value => 750.00,
+                    PlanType::Yearly->value => 1300.00,
+                ],
             ],
         ];
 
-        foreach ($plans as $plan) {
-            Plan::query()->create([
-                ...$plan,
-                'currency' => 'EGP',
+        foreach ($catalog as $item) {
+            $plan = Plan::query()->create([
+                'name' => $item['name'],
+                'description' => $item['description'],
                 'is_active' => true,
             ]);
+
+            foreach ($item['options'] as $typeValue => $price) {
+                $type = PlanType::from($typeValue);
+
+                $plan->options()->create([
+                    'type' => $type,
+                    'price' => $price,
+                    'currency' => 'EGP',
+                    'duration_months' => $type->durationMonths(),
+                    'is_active' => true,
+                ]);
+            }
         }
     }
 }

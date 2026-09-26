@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ScopedBy([BelongsToAuthenticatedStudentScope::class])]
 #[Fillable([
     'student_id',
-    'plan_id',
+    'plan_option_id',
     'status',
     'starts_at',
     'ends_at',
@@ -28,8 +28,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Subscription extends Model
 {
+    /** @use HasFactory<SubscriptionFactory> */
     use HasFactory;
 
+    /**
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -49,9 +53,9 @@ class Subscription extends Model
         return $this->belongsTo(Student::class);
     }
 
-    public function plan(): BelongsTo
+    public function planOption(): BelongsTo
     {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsTo(PlanOption::class);
     }
 
     public function payments(): HasMany

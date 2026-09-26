@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\SubscriptionStatus;
-use App\Models\Plan;
+use App\Models\PlanOption;
 use App\Models\Student;
 use App\Models\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,7 +24,7 @@ class SubscriptionFactory extends Factory
 
         return [
             'student_id' => Student::factory(),
-            'plan_id' => Plan::factory(),
+            'plan_option_id' => PlanOption::factory(),
             'status' => SubscriptionStatus::Active,
             'starts_at' => now(),
             'ends_at' => now()->addMonth(),

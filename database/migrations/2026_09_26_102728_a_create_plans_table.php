@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\PlanType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,14 +14,10 @@ return new class extends Migration
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedTinyInteger('type')->comment(PlanType::class);
-            $table->decimal('price', 12, 2);
-            $table->string('currency', 3)->default('EGP');
-            $table->unsignedTinyInteger('duration_months');
+            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->index('type');
             $table->index('is_active');
         });
     }

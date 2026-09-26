@@ -1,7 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-});
+/*
+|--------------------------------------------------------------------------
+| Shared Web Routes
+|--------------------------------------------------------------------------
+|
+| Guest / public entry routes live in routes/guests.php
+|
+*/

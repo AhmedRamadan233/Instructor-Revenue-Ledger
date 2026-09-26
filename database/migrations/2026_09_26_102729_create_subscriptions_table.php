@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('plan_id')->constrained()->restrictOnDelete();
+            $table->foreignId('plan_option_id')->constrained()->restrictOnDelete();
             $table->unsignedTinyInteger('status')
                 ->default(SubscriptionStatus::Pending->value)
                 ->comment(SubscriptionStatus::class);

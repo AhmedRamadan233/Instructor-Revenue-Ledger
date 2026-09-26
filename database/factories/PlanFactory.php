@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\PlanType;
 use App\Models\Plan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,14 +15,9 @@ class PlanFactory extends Factory
      */
     public function definition(): array
     {
-        $type = fake()->randomElement(PlanType::cases());
-
         return [
-            'name' => $type->label().' Plan',
-            'type' => $type,
-            'price' => fake()->randomFloat(2, 100, 2000),
-            'currency' => 'EGP',
-            'duration_months' => $type->durationMonths(),
+            'name' => fake()->words(2, true).' Plan',
+            'description' => fake()->sentence(),
             'is_active' => true,
         ];
     }
