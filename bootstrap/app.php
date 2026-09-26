@@ -41,6 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('revenue:process')
             ->monthlyOn(1, '02:00')
             ->withoutOverlapping();
+
+        $schedule->command('subscriptions:expire')
+            ->dailyAt('01:00')
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

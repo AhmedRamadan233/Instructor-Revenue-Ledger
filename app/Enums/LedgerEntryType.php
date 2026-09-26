@@ -7,4 +7,5 @@ enum LedgerEntryType: int
     case Earning = 1;
     case Refund = 2;
     case Adjustment = 3;
+    case Payout = 4;
 }

@@ -4,6 +4,66 @@
         <p class="text-muted mb-0">Platform overview and configuration.</p>
     </div>
 
+    <div class="card shadow-sm border-dark mb-4">
+        <div class="card-header bg-dark text-white">
+            <strong>دليل المدير — إزاي بيشتغل نظام الفلوس؟</strong>
+            <div class="small text-white-50 fw-normal">اقرا القواعد دي مرة عشان تبقى فاهم كل شاشة بتعمل إيه.</div>
+        </div>
+        <div class="card-body">
+            <ol class="mb-3 ps-3">
+                <li class="mb-2">
+                    لما الطالب يشترك، المنصة بتاخد
+                    <strong>{{ number_format($platformPercentage, 0) }}%</strong>
+                    (من
+                    <a href="{{ route('dashboard.settings') }}">Settings</a>)
+                    والباقي
+                    <strong>{{ number_format($teacherPoolPercentage, 0) }}%</strong>
+                    حصة المدرّسين. النسبة بتتعمل <em>snapshot</em> وقت الاشتراك — تغيير الإعداد بعد كده مش بيأثر على الاشتراكات القديمة.
+                </li>
+                <li class="mb-2">
+                    حصة المدرّسين بتتوزّع على شهور الخطة، وجوّه كل شهر بتتقسّم
+                    <strong>حسب وقت المشاهدة</strong>
+                    بين المدرّسين اللي الطالب اتفرّج على كورساتهم.
+                </li>
+                <li class="mb-2">
+                    لو مفيش مشاهدة في الشهر، الحصة
+                    <strong>بتترحّل</strong>
+                    للشهر اللي بعده ومبتضيعش.
+                </li>
+                <li class="mb-2">
+                    قفل الشهر بيتم تلقائي يوم <strong>1 الساعة 02:00</strong>
+                    عن الشهر اللي فات، أو يدوي من
+                    <a href="{{ route('dashboard.revenue') }}">Revenue</a>.
+                    الشهر الحالي/المستقبلي مش بيتقفل، والفترة المتقفلة مش بتتكرر.
+                </li>
+                <li class="mb-2">
+                    إلغاء الاشتراك بيقفل وصول الطالب فورًا ومفيش استرجاع.
+                    مشاهدة الشهر لحد الإلغاء بتتحسب؛ الشهور اللي بعده لأ. التوزيعات اللي اتقفلت قبل كده مبتتمسحش.
+                </li>
+                <li class="mb-2">
+                    الاشتراكات المنتهية بتتعلّم
+                    <strong>Expired</strong>
+                    تلقائي يوميًا الساعة 01:00 (`subscriptions:expire`).
+                </li>
+                <li class="mb-2">
+                    المدرّس بيطلب صرف من رصيده → أنت بتراجع من
+                    <a href="{{ route('dashboard.payouts') }}">Payouts</a>:
+                    <strong>Mark paid</strong> (بيتسجّل في الدفتر) أو <strong>Reject</strong> (بيرجع الرصيد متاح).
+                </li>
+                <li class="mb-0">
+                    ملخص مالي شامل للمنصة في
+                    <a href="{{ route('dashboard.reports') }}">Reports</a>
+                    (إيراد الاشتراكات، حصة المنصة، التوزيع، الصرف، حالة الاشتراكات).
+                </li>
+            </ol>
+
+            <div class="alert alert-light border mb-0 small">
+                <strong>مسار سريع:</strong>
+                الطالب يشترك ويتفرّج → تقفل الشهر من Revenue → المدرّس يطلب صرف → توافق من Payouts → تتابع الأرقام من Reports.
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
             <div class="card shadow-sm h-100">
@@ -57,7 +117,7 @@
                 </div>
                 <div class="card-body">
                     <p class="fs-2 fw-semibold mb-1">
-                        {{ $platformPercentage !== null ? $platformPercentage.'%' : '—' }}
+                        {{ number_format($platformPercentage, 0) }}%
                     </p>
                     <p class="text-muted small mb-0">
                         Edit this value from Settings. Snapshot is taken when a subscription is created.

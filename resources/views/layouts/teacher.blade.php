@@ -34,6 +34,9 @@
                     <li class="nav-item">
                         <a class="nav-link @if (request()->routeIs('teacher.ledger')) active @endif" href="{{ route('teacher.ledger') }}">Ledger</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if (request()->routeIs('teacher.payouts')) active @endif" href="{{ route('teacher.payouts') }}">Payouts</a>
+                    </li>
                 </ul>
 
                 <ul class="navbar-nav align-items-lg-center gap-lg-2">

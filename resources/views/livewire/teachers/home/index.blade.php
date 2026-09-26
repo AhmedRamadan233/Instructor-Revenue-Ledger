@@ -48,11 +48,12 @@
                     <strong>مبتتمسحش</strong>.
                 </li>
                 <li class="mb-0">
-                    النتيجة بتظهر في
+                    نتائج الأرباح بتظهر في
                     <a href="{{ route('teacher.allocations') }}">التوزيعات</a>
-                    (تفصيل كل فترة) و
-                    <a href="{{ route('teacher.ledger') }}">دفتر الحساب</a>
-                    (رصيدك الجاري). الصرف للمدرّس هيتم لاحقًا بشكل منفصل.
+                    و
+                    <a href="{{ route('teacher.ledger') }}">دفتر الحساب</a>.
+                    طلب صرف الرصيد من
+                    <a href="{{ route('teacher.payouts') }}">طلبات الصرف</a>.
                 </li>
             </ol>
 

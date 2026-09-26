@@ -37,4 +37,9 @@ class Teacher extends Model
     {
         return $this->hasMany(TeacherLedgerEntry::class);
     }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(Payout::class);
+    }
 }

@@ -67,6 +67,22 @@
                     </li>
                     <li class="nav-item">
                         <a
+                            class="nav-link @if (request()->routeIs('dashboard.payouts')) active @endif"
+                            href="{{ route('dashboard.payouts') }}"
+                        >
+                            Payouts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            class="nav-link @if (request()->routeIs('dashboard.reports')) active @endif"
+                            href="{{ route('dashboard.reports') }}"
+                        >
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
                             class="nav-link @if (request()->routeIs('dashboard.settings')) active @endif"
                             href="{{ route('dashboard.settings') }}"
                         >
