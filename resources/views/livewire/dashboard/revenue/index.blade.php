@@ -67,7 +67,7 @@
                             wire:click="processForDemo"
                             wire:loading.attr="disabled"
                             wire:target="process,processForDemo"
-                            title="Skips already-processed and unfinished-month checks. Rebuilds allocations for this month."
+                            title="Ignores Year/Month. Picks the month with the most watch time and runs full allocation + ledger logic."
                         >
                             <span wire:loading.remove wire:target="processForDemo">Process (demo / re-run)</span>
                             <span wire:loading wire:target="processForDemo">Re-running...</span>
@@ -78,7 +78,7 @@
 
             @if ($showDemoProcess)
                 <p class="text-warning small mt-2 mb-0">
-                    <strong>Demo button:</strong> skips “already processed” and “month not finished yet” locks so you can re-run the same month while recording. Still rebuilds that month’s allocations/earnings from current watch data.
+                    <strong>Demo button (for videos):</strong> ignores the Year/Month fields, finds the month that actually has watch seconds, then runs the real split → allocations → teacher ledger path (also skips “already processed” / “month not finished” locks). Year/Month above will jump to that month after it runs.
                 </p>
             @endif
 
