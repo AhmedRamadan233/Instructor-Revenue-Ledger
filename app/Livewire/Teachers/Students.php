@@ -3,7 +3,7 @@
 namespace App\Livewire\Teachers;
 
 use App\Livewire\Concerns\InteractsWithTable;
-use App\Models\Student;
+use App\Repo\InterFace\StudentRepositoryInterface;
 use Livewire\Attributes\Title;
 
 #[Title('My Students')]
@@ -11,21 +11,32 @@ class Students extends __AbstractTeacherComponent
 {
     use InteractsWithTable;
 
+    private StudentRepositoryInterface $students;
+
+    public function boot(StudentRepositoryInterface $students): void
+    {
+        $this->students = $students;
+    }
+
     public function render()
     {
-        $query = Student::query()
-            ->with('user')
-            ->withCount([
-                'consumptionSessions as sessions_count' => function ($sessionQuery): void {
-                    $sessionQuery->whereHas('course');
-                },
-            ])
-            ->search($this->search);
-
-        $this->applySorting($query, ['created_at', 'id']);
-
         return view('livewire.teachers.students.index', [
-            'students' => $query->paginate(10),
+            'students' => $this->students->forTable(
+                relations: ['user'],
+                scopes: [
+                    'search' => [$this->search],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'id'],
+                modify: function ($query): void {
+                    $query->withCount([
+                        'consumptionSessions as sessions_count' => function ($sessionQuery): void {
+                            $sessionQuery->whereHas('course');
+                        },
+                    ]);
+                },
+            ),
         ]);
     }
 }

@@ -5,7 +5,7 @@ namespace App\Livewire\Students;
 use App\Actions\Subscriptions\CancelSubscription;
 use App\Enums\SubscriptionStatus;
 use App\Livewire\Concerns\InteractsWithTable;
-use App\Models\Subscription;
+use App\Repo\InterFace\SubscriptionRepositoryInterface;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
@@ -14,8 +14,15 @@ class Subscriptions extends __AbstractStudentComponent
 {
     use InteractsWithTable;
 
+    private SubscriptionRepositoryInterface $subscriptions;
+
     #[Url(except: '')]
     public string $status = '';
+
+    public function boot(SubscriptionRepositoryInterface $subscriptions): void
+    {
+        $this->subscriptions = $subscriptions;
+    }
 
     public function updatedStatus(): void
     {
@@ -30,7 +37,7 @@ class Subscriptions extends __AbstractStudentComponent
 
     public function cancel(int $subscriptionId, CancelSubscription $action): void
     {
-        $subscription = Subscription::query()->findOrFail($subscriptionId);
+        $subscription = $this->subscriptions->getById($subscriptionId);
         $action->handle($subscription);
 
         session()->flash(
@@ -41,21 +48,23 @@ class Subscriptions extends __AbstractStudentComponent
 
     public function render()
     {
-        $query = Subscription::query()
-            ->with(['planOption.plan'])
-            ->search($this->search)
-            ->status($this->status);
-
-        $this->applySorting($query, [
-            'created_at',
-            'starts_at',
-            'ends_at',
-            'amount',
-            'status',
-        ]);
-
         return view('livewire.students.subscriptions.index', [
-            'subscriptions' => $query->paginate(10),
+            'subscriptions' => $this->subscriptions->forTable(
+                relations: ['planOption.plan'],
+                scopes: [
+                    'search' => [$this->search],
+                    'status' => [$this->status],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: [
+                    'created_at',
+                    'starts_at',
+                    'ends_at',
+                    'amount',
+                    'status',
+                ],
+            ),
             'statuses' => SubscriptionStatus::cases(),
         ]);
     }

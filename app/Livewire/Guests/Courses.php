@@ -2,25 +2,35 @@
 
 namespace App\Livewire\Guests;
 
-use App\Models\Course;
+use App\Repo\InterFace\CourseRepositoryInterface;
 use Livewire\Attributes\Title;
 
 #[Title('Courses')]
 class Courses extends __AbstractGuestComponent
 {
+    private CourseRepositoryInterface $courses;
+
     public string $search = '';
+
+    public function boot(CourseRepositoryInterface $courses): void
+    {
+        $this->courses = $courses;
+    }
 
     public function render()
     {
-        $courses = Course::query()
-            ->withoutGlobalScopes()
-            ->published()
-            ->search($this->search)
-            ->with([
+        $courses = $this->courses->getWith(
+            relations: [
                 'teacher' => fn ($query) => $query->withoutGlobalScopes()->with('user'),
-            ])
-            ->latest()
-            ->get();
+            ],
+            scopes: [
+                'published' => [],
+                'search' => [$this->search],
+            ],
+            orderBy: 'created_at',
+            direction: 'desc',
+            withoutGlobalScopes: true,
+        );
 
         return view('livewire.guests.courses', [
             'courses' => $courses,

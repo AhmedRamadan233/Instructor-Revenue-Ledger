@@ -6,8 +6,8 @@ use App\Actions\Payouts\MarkPayoutPaid;
 use App\Actions\Payouts\RejectPayout;
 use App\Enums\PayoutStatus;
 use App\Livewire\Concerns\InteractsWithTable;
-use App\Models\Manager;
-use App\Models\Payout;
+use App\Repo\InterFace\ManagerRepositoryInterface;
+use App\Repo\InterFace\PayoutRepositoryInterface;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
@@ -16,8 +16,20 @@ class Payouts extends __AbstractManagerComponent
 {
     use InteractsWithTable;
 
+    private PayoutRepositoryInterface $payouts;
+
+    private ManagerRepositoryInterface $managers;
+
     #[Url(except: '')]
     public string $status = '';
+
+    public function boot(
+        PayoutRepositoryInterface $payouts,
+        ManagerRepositoryInterface $managers,
+    ): void {
+        $this->payouts = $payouts;
+        $this->managers = $managers;
+    }
 
     public function updatedStatus(): void
     {
@@ -32,10 +44,10 @@ class Payouts extends __AbstractManagerComponent
 
     public function markPaid(int $payoutId, MarkPayoutPaid $action): void
     {
-        $payout = Payout::query()->withoutGlobalScopes()->findOrFail($payoutId);
-        $manager = Manager::query()->withoutGlobalScopes()
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        $payout = $this->payouts->getById($payoutId, withoutGlobalScopes: true);
+        $manager = $this->managers->first('user_id', auth()->id(), withoutGlobalScopes: true);
+
+        abort_if($manager === null, 403);
 
         $action->handle($payout, $manager);
 
@@ -44,10 +56,10 @@ class Payouts extends __AbstractManagerComponent
 
     public function reject(int $payoutId, RejectPayout $action): void
     {
-        $payout = Payout::query()->withoutGlobalScopes()->findOrFail($payoutId);
-        $manager = Manager::query()->withoutGlobalScopes()
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        $payout = $this->payouts->getById($payoutId, withoutGlobalScopes: true);
+        $manager = $this->managers->first('user_id', auth()->id(), withoutGlobalScopes: true);
+
+        abort_if($manager === null, 403);
 
         $action->handle($payout, $manager);
 
@@ -56,26 +68,31 @@ class Payouts extends __AbstractManagerComponent
 
     public function render()
     {
-        $query = Payout::query()
-            ->withoutGlobalScopes()
-            ->with([
-                'teacher' => fn ($query) => $query->withoutGlobalScopes()->with('user'),
-            ])
-            ->search($this->search)
-            ->status($this->status);
-
-        $this->applySorting($query, [
-            'created_at',
-            'requested_at',
-            'amount',
-            'status',
-        ], 'requested_at');
-
         return view('livewire.dashboard.payouts.index', [
-            'payouts' => $query->paginate(10),
+            'payouts' => $this->payouts->forTable(
+                relations: [
+                    'teacher' => fn ($query) => $query->withoutGlobalScopes()->with('user'),
+                ],
+                scopes: [
+                    'search' => [$this->search],
+                    'status' => [$this->status],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'requested_at', 'amount', 'status'],
+                defaultSort: 'requested_at',
+                withoutGlobalScopes: true,
+            ),
             'statuses' => PayoutStatus::cases(),
-            'pendingCount' => Payout::query()->withoutGlobalScopes()->where('status', PayoutStatus::Pending)->count(),
-            'paidTotal' => (float) Payout::query()->withoutGlobalScopes()->where('status', PayoutStatus::Paid)->sum('amount'),
+            'pendingCount' => $this->payouts->count(
+                ['status' => PayoutStatus::Pending],
+                withoutGlobalScopes: true,
+            ),
+            'paidTotal' => $this->payouts->sum(
+                'amount',
+                ['status' => PayoutStatus::Paid],
+                withoutGlobalScopes: true,
+            ),
         ]);
     }
 }

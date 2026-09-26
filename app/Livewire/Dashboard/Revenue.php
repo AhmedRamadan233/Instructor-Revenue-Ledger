@@ -4,18 +4,34 @@ namespace App\Livewire\Dashboard;
 
 use App\Actions\Revenue\ProcessRevenuePeriod;
 use App\Livewire\Requests\Dashboard\ProcessRevenueRequest;
-use App\Models\RevenueAllocation;
-use App\Models\RevenuePeriod;
-use App\Models\TeacherLedgerEntry;
+use App\Repo\InterFace\RevenueAllocationRepositoryInterface;
+use App\Repo\InterFace\RevenuePeriodRepositoryInterface;
+use App\Repo\InterFace\TeacherLedgerEntryRepositoryInterface;
 use Carbon\Carbon;
 use Livewire\Attributes\Title;
 
 #[Title('Revenue')]
 class Revenue extends __AbstractManagerComponent
 {
+    private RevenuePeriodRepositoryInterface $periods;
+
+    private RevenueAllocationRepositoryInterface $allocations;
+
+    private TeacherLedgerEntryRepositoryInterface $ledgerEntries;
+
     public int $year;
 
     public int $month;
+
+    public function boot(
+        RevenuePeriodRepositoryInterface $periods,
+        RevenueAllocationRepositoryInterface $allocations,
+        TeacherLedgerEntryRepositoryInterface $ledgerEntries,
+    ): void {
+        $this->periods = $periods;
+        $this->allocations = $allocations;
+        $this->ledgerEntries = $ledgerEntries;
+    }
 
     public function mount(): void
     {
@@ -48,13 +64,12 @@ class Revenue extends __AbstractManagerComponent
     public function render()
     {
         return view('livewire.dashboard.revenue.index', [
-            'periods' => RevenuePeriod::query()
-                ->withCount('allocations')
-                ->latest('period_start')
-                ->limit(12)
-                ->get(),
-            'allocationsCount' => RevenueAllocation::query()->withoutGlobalScopes()->count(),
-            'ledgerCount' => TeacherLedgerEntry::query()->withoutGlobalScopes()->count(),
+            'periods' => $this->periods->getWith(
+                modify: fn ($query) => $query->withCount('allocations')->latest('period_start'),
+                limit: 12,
+            ),
+            'allocationsCount' => $this->allocations->count(withoutGlobalScopes: true),
+            'ledgerCount' => $this->ledgerEntries->count(withoutGlobalScopes: true),
         ]);
     }
 }

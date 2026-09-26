@@ -6,7 +6,8 @@ use App\Enums\PlanType;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Livewire\Requests\Dashboard\PlanRequest;
-use App\Models\Plan;
+use App\Repo\InterFace\PlanOptionRepositoryInterface;
+use App\Repo\InterFace\PlanRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -17,6 +18,10 @@ class Plans extends __AbstractManagerComponent
 {
     use InteractsWithCrudModal;
     use InteractsWithTable;
+
+    private PlanRepositoryInterface $plans;
+
+    private PlanOptionRepositoryInterface $planOptions;
 
     #[Url(except: '')]
     public string $active = '';
@@ -29,6 +34,14 @@ class Plans extends __AbstractManagerComponent
 
     /** @var array<string, array{price: string, is_active: bool}> */
     public array $options = [];
+
+    public function boot(
+        PlanRepositoryInterface $plans,
+        PlanOptionRepositoryInterface $planOptions,
+    ): void {
+        $this->plans = $plans;
+        $this->planOptions = $planOptions;
+    }
 
     public function mount(): void
     {
@@ -57,7 +70,7 @@ class Plans extends __AbstractManagerComponent
 
     public function edit(int $planId): void
     {
-        $plan = Plan::query()->with('options')->findOrFail($planId);
+        $plan = $this->plans->getById($planId, relations: ['options']);
 
         $this->editingId = $plan->id;
         $this->name = $plan->name;
@@ -90,17 +103,20 @@ class Plans extends __AbstractManagerComponent
             ];
 
             if ($this->editingId) {
-                $plan = Plan::query()->findOrFail($this->editingId);
-                $plan->update($payload);
+                $this->plans->update($this->editingId, $payload);
+                $planId = $this->editingId;
             } else {
-                $plan = Plan::query()->create($payload);
+                $planId = $this->plans->create($payload)->id;
             }
 
             foreach (PlanType::cases() as $type) {
                 $optionData = $validated['options'][(string) $type->value];
 
-                $plan->options()->updateOrCreate(
-                    ['type' => $type],
+                $this->planOptions->updateOrCreate(
+                    [
+                        'plan_id' => $planId,
+                        'type' => $type,
+                    ],
                     [
                         'price' => $optionData['price'],
                         'currency' => 'EGP',
@@ -118,7 +134,7 @@ class Plans extends __AbstractManagerComponent
     public function delete(): void
     {
         try {
-            Plan::query()->findOrFail($this->deletingId)->delete();
+            $this->plans->delete($this->deletingId);
             $this->closeDeleteModal();
             session()->flash('success', 'Plan deleted.');
         } catch (Throwable) {
@@ -147,18 +163,23 @@ class Plans extends __AbstractManagerComponent
 
     public function render()
     {
-        $query = Plan::query()
-            ->withCount('options')
-            ->search($this->search);
-
-        if ($this->active !== '') {
-            $query->active($this->active === '1');
-        }
-
-        $this->applySorting($query, ['created_at', 'name', 'is_active'], 'name');
-
         return view('livewire.dashboard.plans.index', [
-            'plans' => $query->paginate(10),
+            'plans' => $this->plans->forTable(
+                scopes: [
+                    'search' => [$this->search],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'name', 'is_active'],
+                defaultSort: 'name',
+                modify: function ($query): void {
+                    $query->withCount('options');
+
+                    if ($this->active !== '') {
+                        $query->active($this->active === '1');
+                    }
+                },
+            ),
             'planTypes' => PlanType::cases(),
         ]);
     }

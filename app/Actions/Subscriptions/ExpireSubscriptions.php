@@ -3,20 +3,24 @@
 namespace App\Actions\Subscriptions;
 
 use App\Enums\SubscriptionStatus;
-use App\Models\CourseConsumptionSession;
-use App\Models\Subscription;
+use App\Repo\InterFace\CourseConsumptionSessionRepositoryInterface;
+use App\Repo\InterFace\SubscriptionRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class ExpireSubscriptions
 {
+    public function __construct(
+        private SubscriptionRepositoryInterface $subscriptions,
+        private CourseConsumptionSessionRepositoryInterface $sessions,
+    ) {}
+
     /**
      * @return array{expired: int, sessions_closed: int}
      */
     public function handle(): array
     {
         return DB::transaction(function (): array {
-            $subscriptionIds = Subscription::query()
-                ->withoutGlobalScopes()
+            $subscriptionIds = $this->subscriptions->query(true)
                 ->where('status', SubscriptionStatus::Active)
                 ->whereNotNull('ends_at')
                 ->where('ends_at', '<', now())
@@ -27,15 +31,13 @@ class ExpireSubscriptions
                 return ['expired' => 0, 'sessions_closed' => 0];
             }
 
-            $expired = Subscription::query()
-                ->withoutGlobalScopes()
+            $expired = $this->subscriptions->query(true)
                 ->whereIn('id', $subscriptionIds)
                 ->update([
                     'status' => SubscriptionStatus::Expired,
                 ]);
 
-            $sessionsClosed = CourseConsumptionSession::query()
-                ->withoutGlobalScopes()
+            $sessionsClosed = $this->sessions->query(true)
                 ->whereIn('subscription_id', $subscriptionIds)
                 ->whereNull('ended_at')
                 ->update([

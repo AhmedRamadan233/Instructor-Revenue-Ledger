@@ -4,48 +4,29 @@ namespace App\Support;
 
 use App\Enums\LedgerEntryType;
 use App\Enums\PayoutStatus;
-use App\Models\Payout;
 use App\Models\Teacher;
-use App\Models\TeacherLedgerEntry;
+use App\Repo\InterFace\PayoutRepositoryInterface;
+use App\Repo\InterFace\TeacherLedgerEntryRepositoryInterface;
 
 final class TeacherBalance
 {
     public static function available(Teacher $teacher, string $currency = 'EGP'): float
     {
-        $earned = (float) TeacherLedgerEntry::query()
-            ->withoutGlobalScopes()
-            ->where('teacher_id', $teacher->id)
-            ->where('currency', $currency)
-            ->where('type', LedgerEntryType::Earning)
-            ->sum('amount');
+        /** @var TeacherLedgerEntryRepositoryInterface $ledger */
+        $ledger = app(TeacherLedgerEntryRepositoryInterface::class);
+        /** @var PayoutRepositoryInterface $payouts */
+        $payouts = app(PayoutRepositoryInterface::class);
 
-        $refunds = (float) TeacherLedgerEntry::query()
-            ->withoutGlobalScopes()
-            ->where('teacher_id', $teacher->id)
-            ->where('currency', $currency)
-            ->where('type', LedgerEntryType::Refund)
-            ->sum('amount');
+        $base = [
+            'teacher_id' => $teacher->id,
+            'currency' => $currency,
+        ];
 
-        $adjustments = (float) TeacherLedgerEntry::query()
-            ->withoutGlobalScopes()
-            ->where('teacher_id', $teacher->id)
-            ->where('currency', $currency)
-            ->where('type', LedgerEntryType::Adjustment)
-            ->sum('amount');
-
-        $paidOut = (float) TeacherLedgerEntry::query()
-            ->withoutGlobalScopes()
-            ->where('teacher_id', $teacher->id)
-            ->where('currency', $currency)
-            ->where('type', LedgerEntryType::Payout)
-            ->sum('amount');
-
-        $reserved = (float) Payout::query()
-            ->withoutGlobalScopes()
-            ->where('teacher_id', $teacher->id)
-            ->where('currency', $currency)
-            ->where('status', PayoutStatus::Pending)
-            ->sum('amount');
+        $earned = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Earning], true);
+        $refunds = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Refund], true);
+        $adjustments = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Adjustment], true);
+        $paidOut = $ledger->sum('amount', [...$base, 'type' => LedgerEntryType::Payout], true);
+        $reserved = $payouts->sum('amount', [...$base, 'status' => PayoutStatus::Pending], true);
 
         return round($earned + $adjustments - $refunds - $paidOut - $reserved, 2);
     }

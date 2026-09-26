@@ -6,19 +6,39 @@ use App\Actions\Subscriptions\SubscribeStudentToPlanOption;
 use App\Enums\PlanType;
 use App\Enums\SubscriptionStatus;
 use App\Livewire\Requests\Students\SubscribeRequest;
-use App\Models\Plan;
-use App\Models\PlanOption;
-use App\Models\Student;
-use App\Models\Subscription;
+use App\Repo\InterFace\PlanOptionRepositoryInterface;
+use App\Repo\InterFace\PlanRepositoryInterface;
+use App\Repo\InterFace\StudentRepositoryInterface;
+use App\Repo\InterFace\SubscriptionRepositoryInterface;
 use App\Support\AuthActor;
 use Livewire\Attributes\Title;
 
 #[Title('Browse Plans')]
 class Plans extends __AbstractStudentComponent
 {
+    private PlanRepositoryInterface $plans;
+
+    private PlanOptionRepositoryInterface $planOptions;
+
+    private StudentRepositoryInterface $students;
+
+    private SubscriptionRepositoryInterface $subscriptions;
+
     public int $selectedType;
 
     public int $planOptionId = 0;
+
+    public function boot(
+        PlanRepositoryInterface $plans,
+        PlanOptionRepositoryInterface $planOptions,
+        StudentRepositoryInterface $students,
+        SubscriptionRepositoryInterface $subscriptions,
+    ): void {
+        $this->plans = $plans;
+        $this->planOptions = $planOptions;
+        $this->students = $students;
+        $this->subscriptions = $subscriptions;
+    }
 
     public function mount(): void
     {
@@ -33,8 +53,8 @@ class Plans extends __AbstractStudentComponent
         $studentId = AuthActor::studentId();
         abort_if($studentId === null, 403);
 
-        $student = Student::query()->withoutGlobalScopes()->findOrFail($studentId);
-        $planOption = PlanOption::query()->with('plan')->findOrFail($planOptionId);
+        $student = $this->students->getById($studentId, withoutGlobalScopes: true);
+        $planOption = $this->planOptions->getById($planOptionId, relations: ['plan']);
 
         $action->handle($student, $planOption);
 
@@ -44,7 +64,7 @@ class Plans extends __AbstractStudentComponent
 
     public function render()
     {
-        $hasActive = Subscription::query()
+        $hasActive = $this->subscriptions->query()
             ->status(SubscriptionStatus::Active)
             ->where(function ($query): void {
                 $query->whereNull('ends_at')
@@ -52,11 +72,13 @@ class Plans extends __AbstractStudentComponent
             })
             ->exists();
 
-        $plans = Plan::query()
-            ->where('is_active', true)
-            ->with(['options' => fn ($query) => $query->where('is_active', true)->orderBy('duration_months')])
-            ->orderBy('name')
-            ->get();
+        $plans = $this->plans->getWith(
+            relations: [
+                'options' => fn ($query) => $query->where('is_active', true)->orderBy('duration_months'),
+            ],
+            conditions: ['is_active' => true],
+            orderBy: 'name',
+        );
 
         return view('livewire.students.plans.index', [
             'plans' => $plans,

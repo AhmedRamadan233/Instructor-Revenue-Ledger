@@ -5,8 +5,8 @@ namespace App\Livewire\Dashboard;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Livewire\Requests\Dashboard\TeacherRequest;
-use App\Models\Teacher;
-use App\Models\User;
+use App\Repo\InterFace\TeacherRepositoryInterface;
+use App\Repo\InterFace\UserRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
 use Throwable;
@@ -17,11 +17,23 @@ class Teachers extends __AbstractManagerComponent
     use InteractsWithCrudModal;
     use InteractsWithTable;
 
+    private TeacherRepositoryInterface $teachers;
+
+    private UserRepositoryInterface $users;
+
     public string $name = '';
 
     public string $email = '';
 
     public string $password = '';
+
+    public function boot(
+        TeacherRepositoryInterface $teachers,
+        UserRepositoryInterface $users,
+    ): void {
+        $this->teachers = $teachers;
+        $this->users = $users;
+    }
 
     public function create(): void
     {
@@ -32,7 +44,7 @@ class Teachers extends __AbstractManagerComponent
 
     public function edit(int $teacherId): void
     {
-        $teacher = Teacher::query()->with('user')->findOrFail($teacherId);
+        $teacher = $this->teachers->getById($teacherId, relations: ['user']);
 
         $this->editingId = $teacher->id;
         $this->name = $teacher->user?->name ?? '';
@@ -45,7 +57,7 @@ class Teachers extends __AbstractManagerComponent
     public function save(): void
     {
         $userId = $this->editingId
-            ? Teacher::query()->findOrFail($this->editingId)->user_id
+            ? $this->teachers->getById($this->editingId)->user_id
             : null;
 
         $validated = $this->validate(TeacherRequest::rules(
@@ -57,8 +69,7 @@ class Teachers extends __AbstractManagerComponent
 
         DB::transaction(function () use ($validated): void {
             if ($this->editingId) {
-                $teacher = Teacher::query()->findOrFail($this->editingId);
-                $user = User::query()->findOrFail($teacher->user_id);
+                $teacher = $this->teachers->getById($this->editingId);
 
                 $payload = [
                     'name' => $validated['name'],
@@ -69,15 +80,15 @@ class Teachers extends __AbstractManagerComponent
                     $payload['password'] = $validated['password'];
                 }
 
-                $user->update($payload);
+                $this->users->update($teacher->user_id, $payload);
             } else {
-                $user = User::query()->create([
+                $user = $this->users->create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'password' => $validated['password'],
                 ]);
 
-                Teacher::query()->create([
+                $this->teachers->create([
                     'user_id' => $user->id,
                 ]);
             }
@@ -89,13 +100,15 @@ class Teachers extends __AbstractManagerComponent
 
     public function delete(): void
     {
-        $teacher = Teacher::query()->with('user')->findOrFail($this->deletingId);
+        $teacher = $this->teachers->getById($this->deletingId, relations: ['user']);
 
         try {
             DB::transaction(function () use ($teacher): void {
-                $user = $teacher->user;
-                $teacher->delete();
-                $user?->delete();
+                $userId = $teacher->user_id;
+                $this->teachers->delete($teacher->id);
+                if ($userId) {
+                    $this->users->delete($userId);
+                }
             });
 
             $this->closeDeleteModal();
@@ -113,15 +126,17 @@ class Teachers extends __AbstractManagerComponent
 
     public function render()
     {
-        $query = Teacher::query()
-            ->with('user')
-            ->withCount('courses')
-            ->search($this->search);
-
-        $this->applySorting($query, ['created_at', 'id']);
-
         return view('livewire.dashboard.teachers.index', [
-            'teachers' => $query->paginate(10),
+            'teachers' => $this->teachers->forTable(
+                relations: ['user'],
+                scopes: [
+                    'search' => [$this->search],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'id'],
+                modify: fn ($query) => $query->withCount('courses'),
+            ),
         ]);
     }
 }

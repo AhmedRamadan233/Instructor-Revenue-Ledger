@@ -4,7 +4,7 @@ namespace App\Livewire\Teachers;
 
 use App\Enums\LedgerEntryType;
 use App\Livewire\Concerns\InteractsWithTable;
-use App\Models\TeacherLedgerEntry;
+use App\Repo\InterFace\TeacherLedgerEntryRepositoryInterface;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
@@ -13,8 +13,15 @@ class Ledger extends __AbstractTeacherComponent
 {
     use InteractsWithTable;
 
+    private TeacherLedgerEntryRepositoryInterface $ledgerEntries;
+
     #[Url(except: '')]
     public string $type = '';
+
+    public function boot(TeacherLedgerEntryRepositoryInterface $ledgerEntries): void
+    {
+        $this->ledgerEntries = $ledgerEntries;
+    }
 
     public function updatedType(): void
     {
@@ -29,20 +36,22 @@ class Ledger extends __AbstractTeacherComponent
 
     public function render()
     {
-        $query = TeacherLedgerEntry::query()
-            ->with('revenuePeriod')
-            ->search($this->search)
-            ->type($this->type);
-
-        $this->applySorting($query, [
-            'created_at',
-            'amount',
-            'type',
-            'currency',
-        ]);
-
         return view('livewire.teachers.ledger.index', [
-            'entries' => $query->paginate(10),
+            'entries' => $this->ledgerEntries->forTable(
+                relations: ['revenuePeriod'],
+                scopes: [
+                    'search' => [$this->search],
+                    'type' => [$this->type],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: [
+                    'created_at',
+                    'amount',
+                    'type',
+                    'currency',
+                ],
+            ),
             'types' => LedgerEntryType::cases(),
         ]);
     }

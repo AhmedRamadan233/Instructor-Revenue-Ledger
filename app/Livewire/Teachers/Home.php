@@ -2,41 +2,68 @@
 
 namespace App\Livewire\Teachers;
 
-use App\Models\Course;
-use App\Models\RevenueAllocation;
-use App\Models\Setting;
-use App\Models\Student;
-use App\Models\TeacherLedgerEntry;
+use App\Repo\InterFace\CourseRepositoryInterface;
+use App\Repo\InterFace\RevenueAllocationRepositoryInterface;
+use App\Repo\InterFace\SettingRepositoryInterface;
+use App\Repo\InterFace\StudentRepositoryInterface;
+use App\Repo\InterFace\TeacherLedgerEntryRepositoryInterface;
 use Livewire\Attributes\Title;
 
 #[Title('Teacher Dashboard')]
 class Home extends __AbstractTeacherComponent
 {
+    private SettingRepositoryInterface $settings;
+
+    private CourseRepositoryInterface $courses;
+
+    private StudentRepositoryInterface $students;
+
+    private RevenueAllocationRepositoryInterface $allocations;
+
+    private TeacherLedgerEntryRepositoryInterface $ledgerEntries;
+
+    public function boot(
+        SettingRepositoryInterface $settings,
+        CourseRepositoryInterface $courses,
+        StudentRepositoryInterface $students,
+        RevenueAllocationRepositoryInterface $allocations,
+        TeacherLedgerEntryRepositoryInterface $ledgerEntries,
+    ): void {
+        $this->settings = $settings;
+        $this->courses = $courses;
+        $this->students = $students;
+        $this->allocations = $allocations;
+        $this->ledgerEntries = $ledgerEntries;
+    }
+
     public function render()
     {
-        $platformPercentage = (float) (Setting::query()
-            ->withoutGlobalScopes()
-            ->where('key', 'platform_revenue_percentage')
-            ->value('value') ?? 20);
+        $platformPercentage = (float) ($this->settings->first(
+            'key',
+            'platform_revenue_percentage',
+            withoutGlobalScopes: true,
+        )?->value ?? 20);
 
         return view('livewire.teachers.home.index', [
             'platformPercentage' => $platformPercentage,
             'teacherPoolPercentage' => max(0, 100 - $platformPercentage),
-            'coursesCount' => Course::query()->count(),
-            'studentsCount' => Student::query()->count(),
-            'allocationsCount' => RevenueAllocation::query()->count(),
-            'ledgerCount' => TeacherLedgerEntry::query()->count(),
-            'totalAllocated' => (float) RevenueAllocation::query()->sum('allocated_amount'),
-            'recentCourses' => Course::query()
-                ->withCount('students')
-                ->latest()
-                ->limit(3)
-                ->get(),
-            'recentAllocations' => RevenueAllocation::query()
-                ->with('revenuePeriod')
-                ->latest()
-                ->limit(3)
-                ->get(),
+            'coursesCount' => $this->courses->count(),
+            'studentsCount' => $this->students->count(),
+            'allocationsCount' => $this->allocations->count(),
+            'ledgerCount' => $this->ledgerEntries->count(),
+            'totalAllocated' => $this->allocations->sum('allocated_amount'),
+            'recentCourses' => $this->courses->getWith(
+                orderBy: 'created_at',
+                direction: 'desc',
+                modify: fn ($query) => $query->withCount('students'),
+                limit: 3,
+            ),
+            'recentAllocations' => $this->allocations->getWith(
+                relations: ['revenuePeriod'],
+                orderBy: 'created_at',
+                direction: 'desc',
+                limit: 3,
+            ),
         ]);
     }
 }

@@ -3,12 +3,14 @@
 namespace App\Livewire\Dashboard;
 
 use App\Livewire\Requests\Dashboard\SettingRequest;
-use App\Models\Setting;
+use App\Repo\InterFace\SettingRepositoryInterface;
 use Livewire\Attributes\Title;
 
 #[Title('Settings')]
 class Settings extends __AbstractManagerComponent
 {
+    private SettingRepositoryInterface $settings;
+
     public bool $showModal = false;
 
     public ?int $editingId = null;
@@ -17,9 +19,14 @@ class Settings extends __AbstractManagerComponent
 
     public string $editingValue = '';
 
+    public function boot(SettingRepositoryInterface $settings): void
+    {
+        $this->settings = $settings;
+    }
+
     public function edit(int $settingId): void
     {
-        $setting = Setting::query()->findOrFail($settingId);
+        $setting = $this->settings->getById($settingId);
 
         $this->editingId = $setting->id;
         $this->editingKey = $setting->key;
@@ -38,14 +45,14 @@ class Settings extends __AbstractManagerComponent
 
     public function save(): void
     {
-        $setting = Setting::query()->findOrFail($this->editingId);
+        $setting = $this->settings->getById($this->editingId);
 
         $this->validate(
             SettingRequest::rules($setting->key),
             SettingRequest::messages($setting->key),
         );
 
-        $setting->update([
+        $this->settings->update($setting->id, [
             'value' => (string) $this->editingValue,
         ]);
 
@@ -57,7 +64,7 @@ class Settings extends __AbstractManagerComponent
     public function render()
     {
         return view('livewire.dashboard.settings.index', [
-            'settings' => Setting::query()->orderBy('key')->get(),
+            'settings' => $this->settings->getWith(orderBy: 'key'),
         ]);
     }
 }

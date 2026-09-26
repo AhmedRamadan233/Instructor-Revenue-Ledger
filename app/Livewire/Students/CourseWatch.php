@@ -5,8 +5,9 @@ namespace App\Livewire\Students;
 use App\Actions\Consumption\RecordCourseWatch;
 use App\Livewire\Requests\Students\WatchRequest;
 use App\Models\Course;
-use App\Models\CourseConsumptionSession;
-use App\Models\Student;
+use App\Repo\InterFace\CourseConsumptionSessionRepositoryInterface;
+use App\Repo\InterFace\CourseRepositoryInterface;
+use App\Repo\InterFace\StudentRepositoryInterface;
 use App\Support\AuthActor;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -14,6 +15,12 @@ use Livewire\Attributes\Title;
 #[Title('Watch Course')]
 class CourseWatch extends __AbstractStudentComponent
 {
+    private CourseRepositoryInterface $courses;
+
+    private StudentRepositoryInterface $students;
+
+    private CourseConsumptionSessionRepositoryInterface $sessions;
+
     public Course $course;
 
     public int $seconds = 30;
@@ -28,9 +35,19 @@ class CourseWatch extends __AbstractStudentComponent
 
     public bool $hasOpenSession = false;
 
+    public function boot(
+        CourseRepositoryInterface $courses,
+        StudentRepositoryInterface $students,
+        CourseConsumptionSessionRepositoryInterface $sessions,
+    ): void {
+        $this->courses = $courses;
+        $this->students = $students;
+        $this->sessions = $sessions;
+    }
+
     public function mount(Course $course): void
     {
-        $this->course = $course->load([
+        $this->course = $this->courses->getById($course->id, relations: [
             'teacher' => fn ($query) => $query->withoutGlobalScopes()->with('user'),
         ]);
 
@@ -44,7 +61,7 @@ class CourseWatch extends __AbstractStudentComponent
         $studentId = AuthActor::studentId();
         abort_if($studentId === null, 403);
 
-        $student = Student::query()->withoutGlobalScopes()->findOrFail($studentId);
+        $student = $this->students->getById($studentId, withoutGlobalScopes: true);
         $action->handle($student, $this->course, $this->seconds);
 
         $this->refreshWatchStats();
@@ -55,7 +72,7 @@ class CourseWatch extends __AbstractStudentComponent
         $studentId = AuthActor::studentId();
         abort_if($studentId === null, 403);
 
-        CourseConsumptionSession::query()
+        $this->sessions->query()
             ->where('student_id', $studentId)
             ->where('course_id', $this->course->id)
             ->whereNull('ended_at')
@@ -78,11 +95,14 @@ class CourseWatch extends __AbstractStudentComponent
             return;
         }
 
-        $sessions = CourseConsumptionSession::query()
-            ->where('student_id', $studentId)
-            ->where('course_id', $this->course->id)
-            ->orderByDesc('id')
-            ->get();
+        $sessions = $this->sessions->getWith(
+            conditions: [
+                'student_id' => $studentId,
+                'course_id' => $this->course->id,
+            ],
+            orderBy: 'id',
+            direction: 'desc',
+        );
 
         $this->sessionsCount = $sessions->count();
         $this->totalWatchSeconds = (int) $sessions->sum('watch_seconds');
@@ -128,12 +148,15 @@ class CourseWatch extends __AbstractStudentComponent
     {
         return view('livewire.students.courses.watch', [
             'course' => $this->course,
-            'sessions' => CourseConsumptionSession::query()
-                ->where('student_id', AuthActor::studentId())
-                ->where('course_id', $this->course->id)
-                ->latest('id')
-                ->limit(10)
-                ->get(),
+            'sessions' => $this->sessions->take(
+                limit: 10,
+                conditions: [
+                    'student_id' => AuthActor::studentId(),
+                    'course_id' => $this->course->id,
+                ],
+                orderBy: 'id',
+                direction: 'desc',
+            ),
         ]);
     }
 }

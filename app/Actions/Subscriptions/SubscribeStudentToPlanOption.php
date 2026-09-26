@@ -5,15 +5,22 @@ namespace App\Actions\Subscriptions;
 use App\Enums\SubscriptionPaymentStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\PlanOption;
-use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Subscription;
-use App\Models\SubscriptionPayment;
+use App\Repo\InterFace\SettingRepositoryInterface;
+use App\Repo\InterFace\SubscriptionPaymentRepositoryInterface;
+use App\Repo\InterFace\SubscriptionRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SubscribeStudentToPlanOption
 {
+    public function __construct(
+        private SubscriptionRepositoryInterface $subscriptions,
+        private SubscriptionPaymentRepositoryInterface $payments,
+        private SettingRepositoryInterface $settings,
+    ) {}
+
     public function handle(Student $student, PlanOption $planOption): Subscription
     {
         if (! $planOption->is_active || ! $planOption->plan?->is_active) {
@@ -22,8 +29,7 @@ class SubscribeStudentToPlanOption
             ]);
         }
 
-        $hasActive = Subscription::query()
-            ->withoutGlobalScopes()
+        $hasActive = $this->subscriptions->query(true)
             ->where('student_id', $student->id)
             ->where('status', SubscriptionStatus::Active)
             ->where(function ($query): void {
@@ -38,10 +44,11 @@ class SubscribeStudentToPlanOption
             ]);
         }
 
-        $platformPercentage = (float) (Setting::query()
-            ->withoutGlobalScopes()
-            ->where('key', 'platform_revenue_percentage')
-            ->value('value') ?? 20);
+        $platformPercentage = (float) ($this->settings->first(
+            'key',
+            'platform_revenue_percentage',
+            withoutGlobalScopes: true,
+        )?->value ?? 20);
 
         $amount = round((float) $planOption->price, 2);
         $platformAmount = round($amount * ($platformPercentage / 100), 2);
@@ -55,7 +62,7 @@ class SubscribeStudentToPlanOption
             $platformAmount,
             $teacherPoolAmount,
         ): Subscription {
-            $subscription = Subscription::query()->create([
+            $subscription = $this->subscriptions->create([
                 'student_id' => $student->id,
                 'plan_option_id' => $planOption->id,
                 'status' => SubscriptionStatus::Active,
@@ -70,7 +77,7 @@ class SubscribeStudentToPlanOption
                 'paid_at' => now(),
             ]);
 
-            SubscriptionPayment::query()->create([
+            $this->payments->create([
                 'subscription_id' => $subscription->id,
                 'amount' => $amount,
                 'currency' => $planOption->currency,

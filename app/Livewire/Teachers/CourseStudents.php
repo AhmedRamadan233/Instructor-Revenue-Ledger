@@ -4,7 +4,7 @@ namespace App\Livewire\Teachers;
 
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Models\Course;
-use App\Models\Student;
+use App\Repo\InterFace\StudentRepositoryInterface;
 use Livewire\Attributes\Title;
 
 #[Title('Course Students')]
@@ -12,7 +12,14 @@ class CourseStudents extends __AbstractTeacherComponent
 {
     use InteractsWithTable;
 
+    private StudentRepositoryInterface $students;
+
     public Course $course;
+
+    public function boot(StudentRepositoryInterface $students): void
+    {
+        $this->students = $students;
+    }
 
     public function mount(Course $course): void
     {
@@ -21,21 +28,25 @@ class CourseStudents extends __AbstractTeacherComponent
 
     public function render()
     {
-        $query = Student::query()
-            ->with('user')
-            ->forCourse($this->course->id)
-            ->withCount([
-                'consumptionSessions as sessions_count' => function ($sessionQuery): void {
-                    $sessionQuery->where('course_id', $this->course->id);
-                },
-            ])
-            ->search($this->search);
-
-        $this->applySorting($query, ['created_at', 'id']);
-
         return view('livewire.teachers.course-students.index', [
             'course' => $this->course,
-            'students' => $query->paginate(10),
+            'students' => $this->students->forTable(
+                relations: ['user'],
+                scopes: [
+                    'forCourse' => [$this->course->id],
+                    'search' => [$this->search],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'id'],
+                modify: function ($query): void {
+                    $query->withCount([
+                        'consumptionSessions as sessions_count' => function ($sessionQuery): void {
+                            $sessionQuery->where('course_id', $this->course->id);
+                        },
+                    ]);
+                },
+            ),
         ]);
     }
 }

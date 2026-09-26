@@ -6,7 +6,7 @@ use App\Enums\CourseStatus;
 use App\Livewire\Concerns\InteractsWithCrudModal;
 use App\Livewire\Concerns\InteractsWithTable;
 use App\Livewire\Requests\Teachers\CourseRequest;
-use App\Models\Course;
+use App\Repo\InterFace\CourseRepositoryInterface;
 use App\Support\AuthActor;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -18,6 +18,8 @@ class Courses extends __AbstractTeacherComponent
     use InteractsWithCrudModal;
     use InteractsWithTable;
 
+    private CourseRepositoryInterface $courses;
+
     #[Url(except: '')]
     public string $status = '';
 
@@ -26,6 +28,11 @@ class Courses extends __AbstractTeacherComponent
     public string $description = '';
 
     public string $courseStatus = '';
+
+    public function boot(CourseRepositoryInterface $courses): void
+    {
+        $this->courses = $courses;
+    }
 
     public function updatedStatus(): void
     {
@@ -48,7 +55,7 @@ class Courses extends __AbstractTeacherComponent
 
     public function edit(int $courseId): void
     {
-        $course = Course::query()->findOrFail($courseId);
+        $course = $this->courses->getById($courseId);
 
         $this->editingId = $course->id;
         $this->title = $course->title;
@@ -75,9 +82,9 @@ class Courses extends __AbstractTeacherComponent
         ];
 
         if ($this->editingId) {
-            Course::query()->findOrFail($this->editingId)->update($payload);
+            $this->courses->update($this->editingId, $payload);
         } else {
-            Course::query()->create([
+            $this->courses->create([
                 ...$payload,
                 'teacher_id' => $teacherId,
             ]);
@@ -90,7 +97,7 @@ class Courses extends __AbstractTeacherComponent
     public function delete(): void
     {
         try {
-            Course::query()->findOrFail($this->deletingId)->delete();
+            $this->courses->delete($this->deletingId);
             $this->closeDeleteModal();
             session()->flash('success', 'Course deleted.');
         } catch (Throwable) {
@@ -106,20 +113,18 @@ class Courses extends __AbstractTeacherComponent
 
     public function render()
     {
-        $query = Course::query()
-            ->withCount('students')
-            ->search($this->search)
-            ->status($this->status);
-
-        $this->applySorting($query, [
-            'created_at',
-            'title',
-            'status',
-            'updated_at',
-        ], 'title');
-
         return view('livewire.teachers.courses.index', [
-            'courses' => $query->paginate(10),
+            'courses' => $this->courses->forTable(
+                scopes: [
+                    'search' => [$this->search],
+                    'status' => [$this->status],
+                ],
+                sortBy: $this->sortBy,
+                sortDirection: $this->sortDirection,
+                allowedSorts: ['created_at', 'title', 'status', 'updated_at'],
+                defaultSort: 'title',
+                modify: fn ($query) => $query->withCount('students'),
+            ),
             'statuses' => CourseStatus::cases(),
         ]);
     }

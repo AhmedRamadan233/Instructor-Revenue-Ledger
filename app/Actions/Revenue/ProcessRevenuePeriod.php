@@ -6,16 +6,35 @@ use App\Enums\LedgerEntryType;
 use App\Enums\RevenuePeriodStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\CourseConsumptionSession;
-use App\Models\RevenueAllocation;
 use App\Models\RevenuePeriod;
 use App\Models\Subscription;
-use App\Models\TeacherLedgerEntry;
+use App\Repo\InterFace\CourseConsumptionSessionRepositoryInterface;
+use App\Repo\InterFace\RevenueAllocationRepositoryInterface;
+use App\Repo\InterFace\RevenuePeriodRepositoryInterface;
+use App\Repo\InterFace\SubscriptionRepositoryInterface;
+use App\Repo\InterFace\TeacherLedgerEntryRepositoryInterface;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ProcessRevenuePeriod
 {
+    public function __construct(
+        private RevenuePeriodRepositoryInterface $periods,
+        private RevenueAllocationRepositoryInterface $allocations,
+        private TeacherLedgerEntryRepositoryInterface $ledgerEntries,
+        private SubscriptionRepositoryInterface $subscriptions,
+        private CourseConsumptionSessionRepositoryInterface $sessions,
+    ) {}
+
+    /**
+     * @return array{
+     *     period: RevenuePeriod,
+     *     allocations: int,
+     *     ledger_entries: int,
+     *     carried_forward: int
+     * }
+     */
     public function handle(CarbonInterface $periodStart, CarbonInterface $periodEnd): array
     {
         $periodStart = $periodStart->copy()->startOfDay();
@@ -24,14 +43,13 @@ class ProcessRevenuePeriod
         $this->assertCloseableCalendarMonth($periodStart, $periodEnd);
 
         return DB::transaction(function () use ($periodStart, $periodEnd): array {
-            $period = RevenuePeriod::query()
-                ->withoutGlobalScopes()
+            $period = $this->periods->query(true)
                 ->whereDate('period_start', $periodStart->toDateString())
                 ->whereDate('period_end', $periodEnd->toDateString())
                 ->first();
 
             if ($period === null) {
-                $period = RevenuePeriod::query()->withoutGlobalScopes()->create([
+                $period = $this->periods->create([
                     'period_start' => $periodStart->toDateString(),
                     'period_end' => $periodEnd->toDateString(),
                     'status' => RevenuePeriodStatus::Open,
@@ -44,23 +62,24 @@ class ProcessRevenuePeriod
                 ]);
             }
 
-            RevenueAllocation::query()
-                ->withoutGlobalScopes()
-                ->where('revenue_period_id', $period->id)
-                ->delete();
+            $this->allocations->deleteWhere(
+                ['revenue_period_id' => $period->id],
+                withoutGlobalScopes: true,
+            );
 
-            TeacherLedgerEntry::query()
-                ->withoutGlobalScopes()
-                ->where('revenue_period_id', $period->id)
-                ->where('type', LedgerEntryType::Earning)
-                ->delete();
+            $this->ledgerEntries->deleteWhere(
+                [
+                    'revenue_period_id' => $period->id,
+                    'type' => LedgerEntryType::Earning,
+                ],
+                withoutGlobalScopes: true,
+            );
 
             $allocationsCount = 0;
             $carriedForward = 0;
             $teacherTotals = [];
 
-            $subscriptions = Subscription::query()
-                ->withoutGlobalScopes()
+            $subscriptions = $this->subscriptions->query(true)
                 ->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::Expired, SubscriptionStatus::Cancelled])
                 ->where('starts_at', '<=', $periodEnd)
                 ->where(function ($query) use ($periodStart): void {
@@ -87,7 +106,7 @@ class ProcessRevenuePeriod
             $ledgerEntries = 0;
 
             foreach ($teacherTotals as $teacherId => $data) {
-                TeacherLedgerEntry::query()->create([
+                $this->ledgerEntries->create([
                     'teacher_id' => $teacherId,
                     'type' => LedgerEntryType::Earning,
                     'amount' => $data['amount'],
@@ -99,10 +118,10 @@ class ProcessRevenuePeriod
                 $ledgerEntries++;
             }
 
-            $period->update([
+            $this->periods->update($period->id, [
                 'status' => RevenuePeriodStatus::Processed,
                 'processed_at' => now(),
-            ]);
+            ], withoutGlobalScopes: true);
 
             return [
                 'period' => $period->refresh(),
@@ -164,8 +183,7 @@ class ProcessRevenuePeriod
             return ['allocations' => 0, 'carried' => false];
         }
 
-        $sessions = CourseConsumptionSession::query()
-            ->withoutGlobalScopes()
+        $sessions = $this->sessions->query(true)
             ->with(['course' => fn ($query) => $query->withoutGlobalScopes()])
             ->where('subscription_id', $subscription->id)
             ->whereBetween('started_at', [$periodStart, $periodEnd])
@@ -179,9 +197,9 @@ class ProcessRevenuePeriod
         $totalSeconds = (int) $consumptionByTeacher->sum();
 
         if ($totalSeconds <= 0) {
-            $subscription->update([
+            $this->subscriptions->update($subscription->id, [
                 'pool_carry_amount' => $periodPool,
-            ]);
+            ], withoutGlobalScopes: true);
 
             return ['allocations' => 0, 'carried' => true];
         }
@@ -205,7 +223,7 @@ class ProcessRevenuePeriod
                 continue;
             }
 
-            RevenueAllocation::query()->create([
+            $this->allocations->create([
                 'revenue_period_id' => $period->id,
                 'subscription_id' => $subscription->id,
                 'teacher_id' => $teacherId,
@@ -228,9 +246,9 @@ class ProcessRevenuePeriod
             $created++;
         }
 
-        $subscription->update([
+        $this->subscriptions->update($subscription->id, [
             'pool_carry_amount' => 0,
-        ]);
+        ], withoutGlobalScopes: true);
 
         return ['allocations' => $created, 'carried' => false];
     }
