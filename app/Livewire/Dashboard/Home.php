@@ -19,7 +19,9 @@ class Home extends __AbstractManagerComponent
             'teachersCount' => Teacher::query()->withoutGlobalScopes()->count(),
             'plansCount' => Plan::query()->where('is_active', true)->count(),
             'coursesCount' => Course::query()->withoutGlobalScopes()->count(),
-            'settings' => Setting::query()->orderBy('key')->get(),
+            'platformPercentage' => Setting::query()
+                ->where('key', 'platform_revenue_percentage')
+                ->value('value'),
             'recentCourses' => Course::query()
                 ->withoutGlobalScopes()
                 ->with(['teacher' => fn ($query) => $query->withoutGlobalScopes()->with('user')])

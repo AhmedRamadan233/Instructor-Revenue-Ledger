@@ -42,32 +42,17 @@
     <div class="row g-3">
         <div class="col-12 col-lg-5">
             <div class="card shadow-sm h-100">
-                <div class="card-header">Settings</div>
-                <div class="card-body p-0">
-                    @if ($settings->isEmpty())
-                        <p class="text-muted p-3 mb-0">No settings found.</p>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-striped mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Value</th>
-                                        <th>Type</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($settings as $setting)
-                                        <tr>
-                                            <td>{{ $setting->key }}</td>
-                                            <td>{{ $setting->value }}</td>
-                                            <td>{{ $setting->type->name }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Platform Revenue %</span>
+                    <a href="{{ route('dashboard.settings') }}" class="btn btn-sm btn-outline-primary">Edit Settings</a>
+                </div>
+                <div class="card-body">
+                    <p class="fs-2 fw-semibold mb-1">
+                        {{ $platformPercentage !== null ? $platformPercentage.'%' : '—' }}
+                    </p>
+                    <p class="text-muted small mb-0">
+                        Edit this value from Settings. Snapshot is taken when a subscription is created.
+                    </p>
                 </div>
             </div>
         </div>
