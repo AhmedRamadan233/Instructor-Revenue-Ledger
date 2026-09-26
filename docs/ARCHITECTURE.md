@@ -88,8 +88,8 @@ Intended production shape (not implemented as load proof):
 | Brief | This repo | Notes |
 |-------|-----------|--------|
 | Laravel 11 | Laravel 13 | Same patterns |
-| Livewire v3 | Livewire v4 | UI layer |
-| Filament teacher balance page | Livewire teacher Ledger / Payouts | Filament still on the delivery backlog (P2) |
+| Livewire v3 | Livewire v4 | Student / Teacher UI |
+| Filament v3 | Filament **v5** Manager panel (`/dashboard`) | Teacher view shows balance + ledger + payouts |
 | Pest | PHPUnit Feature tests | Equivalent coverage; Pest optional later |
 | MySQL | MySQL locally + SQLite in tests | |
 

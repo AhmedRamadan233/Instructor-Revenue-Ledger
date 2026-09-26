@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Attribute\UserAttributes;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,9 +14,9 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, UserAttributes, Notifiable;
+    use HasFactory, Notifiable, UserAttributes;
 
     protected function casts(): array
     {
@@ -39,10 +41,15 @@ class User extends Authenticatable
         return $this->hasOne(Manager::class);
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $panel->getId() === 'admin' && $this->manager()->exists();
+    }
+
     public function dashboardRouteName(): string
     {
         return match (true) {
-            $this->is_manager => 'dashboard.home',
+            $this->is_manager => 'filament.admin.pages.dashboard',
             $this->is_teacher => 'teacher.home',
             $this->is_student => 'student.home',
             default => 'guest.home',
