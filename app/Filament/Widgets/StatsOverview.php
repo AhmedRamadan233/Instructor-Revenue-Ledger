@@ -14,11 +14,7 @@ class StatsOverview extends StatsOverviewWidget
 {
     protected ?string $heading = 'Platform overview';
 
-    protected int|string|array $columns = [
-        'default' => 1,
-        'sm' => 2,
-        'lg' => 3,
-    ];
+    protected int|array|null $columns = 3;
 
     protected function getStats(): array
     {
