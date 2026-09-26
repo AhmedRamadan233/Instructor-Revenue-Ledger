@@ -1,15 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Guests;
+namespace App\Livewire\Guests;
 
 use App\Enums\PlanType;
-use App\Http\Controllers\__AbstractGuestController;
 use App\Models\Plan;
-use Illuminate\View\View;
+use Livewire\Attributes\Title;
 
-class PlanController extends __AbstractGuestController
+#[Title('Plans')]
+class Plans extends __AbstractGuestComponent
 {
-    public function __invoke(): View
+    public int $selectedType;
+
+    public function mount(): void
+    {
+        $this->selectedType = PlanType::Monthly->value;
+    }
+
+    public function render()
     {
         $plans = Plan::query()
             ->where('is_active', true)
@@ -17,7 +24,7 @@ class PlanController extends __AbstractGuestController
             ->orderBy('name')
             ->get();
 
-        return view('guests.plans', [
+        return view('livewire.guests.plans', [
             'plans' => $plans,
             'planTypes' => PlanType::cases(),
         ]);

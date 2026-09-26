@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Guests\CourseController;
-use App\Http\Controllers\Guests\HomeController;
-use App\Http\Controllers\Guests\PlanController;
+use App\Livewire\Guests\Courses;
+use App\Livewire\Guests\Home;
+use App\Livewire\Guests\Plans;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', HomeController::class)->name('home');
-Route::get('/plans', PlanController::class)->name('plans');
-Route::get('/courses', CourseController::class)->name('courses');
+Route::get('/', Home::class)->name('home');
+Route::get('/plans', Plans::class)->name('plans');
+Route::get('/courses', Courses::class)->name('courses');

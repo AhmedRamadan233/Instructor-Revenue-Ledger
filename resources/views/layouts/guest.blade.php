@@ -3,11 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', config('app.name'))</title>
+    <title>{{ $title ?? config('app.name') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    @livewireStyles
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <nav
+        class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top"
+        x-data="{ open: false }"
+    >
         <div class="container">
             <a class="navbar-brand fw-semibold" href="{{ route('guest.home') }}">
                 {{ config('app.name') }}
@@ -16,16 +20,18 @@
             <button
                 class="navbar-toggler"
                 type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#guestNavbar"
-                aria-controls="guestNavbar"
-                aria-expanded="false"
+                @click="open = !open"
+                :aria-expanded="open.toString()"
                 aria-label="Toggle navigation"
             >
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="guestNavbar">
+            <div
+                class="navbar-collapse"
+                :class="{ show: open, collapse: !open }"
+                id="guestNavbar"
+            >
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a
@@ -49,10 +55,9 @@
     </nav>
 
     <main class="container py-4">
-        @yield('content')
+        {{ $slot }}
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
+    @livewireScripts
 </body>
 </html>
