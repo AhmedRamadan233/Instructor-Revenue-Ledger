@@ -40,6 +40,8 @@
         <div class="card-body">
             <p class="text-muted small mb-3">
                 Manual close for catch-up only. Default is last month. Processing locks the period permanently.
+                Important: only watches and subscriptions that overlap the selected month are counted.
+                Processing August never uses September watch sessions.
             </p>
             <form wire:submit="process" class="row g-3 align-items-end">
                 <div class="col-md-3">

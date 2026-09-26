@@ -32,7 +32,8 @@ class ProcessRevenuePeriod
      *     period: RevenuePeriod,
      *     allocations: int,
      *     ledger_entries: int,
-     *     carried_forward: int
+     *     carried_forward: int,
+     *     subscriptions_considered: int
      * }
      */
     public function handle(
@@ -153,6 +154,7 @@ class ProcessRevenuePeriod
                 'allocations' => $allocationsCount,
                 'ledger_entries' => $ledgerEntries,
                 'carried_forward' => $carriedForward,
+                'subscriptions_considered' => $subscriptions->count(),
             ];
         });
     }
