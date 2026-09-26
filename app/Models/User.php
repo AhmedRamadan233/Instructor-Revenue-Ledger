@@ -15,14 +15,8 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -48,16 +42,22 @@ class User extends Authenticatable
 
     protected function isStudent(): Attribute
     {
-        return Attribute::get(fn (): bool => $this->student()->exists())->shouldCache();
+        return Attribute::get(
+            fn (): bool => $this->student()->withoutGlobalScopes()->exists()
+        )->shouldCache();
     }
 
     protected function isTeacher(): Attribute
     {
-        return Attribute::get(fn (): bool => $this->teacher()->exists())->shouldCache();
+        return Attribute::get(
+            fn (): bool => $this->teacher()->withoutGlobalScopes()->exists()
+        )->shouldCache();
     }
 
     protected function isManager(): Attribute
     {
-        return Attribute::get(fn (): bool => $this->manager()->exists())->shouldCache();
+        return Attribute::get(
+            fn (): bool => $this->manager()->withoutGlobalScopes()->exists()
+        )->shouldCache();
     }
 }

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\RevenuePeriodStatus;
+use App\Models\Scopes\RevenuePeriodAccessScope;
 use Database\Factories\RevenuePeriodFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ScopedBy([RevenuePeriodAccessScope::class])]
 #[Fillable([
     'period_start',
     'period_end',
@@ -17,12 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class RevenuePeriod extends Model
 {
-    /** @use HasFactory<RevenuePeriodFactory> */
     use HasFactory;
-
-    /**
-     * @return array<string, string>
-     */
+    
     protected function casts(): array
     {
         return [

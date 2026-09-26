@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Enums\SubscriptionStatus;
+use App\Models\Scopes\BelongsToAuthenticatedStudentScope;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ScopedBy([BelongsToAuthenticatedStudentScope::class])]
 #[Fillable([
     'student_id',
     'plan_id',
@@ -25,12 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Subscription extends Model
 {
-    /** @use HasFactory<SubscriptionFactory> */
     use HasFactory;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

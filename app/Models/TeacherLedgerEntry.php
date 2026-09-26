@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Enums\LedgerEntryType;
+use App\Models\Scopes\BelongsToAuthenticatedTeacherScope;
 use Database\Factories\TeacherLedgerEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+#[ScopedBy([BelongsToAuthenticatedTeacherScope::class])]
 #[Fillable([
     'teacher_id',
     'type',
@@ -21,14 +24,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 ])]
 class TeacherLedgerEntry extends Model
 {
-    /** @use HasFactory<TeacherLedgerEntryFactory> */
     use HasFactory;
 
     public const UPDATED_AT = null;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

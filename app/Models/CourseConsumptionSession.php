@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\CourseConsumptionSessionAccessScope;
 use Database\Factories\CourseConsumptionSessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ScopedBy([CourseConsumptionSessionAccessScope::class])]
 #[Fillable([
     'student_id',
     'course_id',
@@ -19,12 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class CourseConsumptionSession extends Model
 {
-    /** @use HasFactory<CourseConsumptionSessionFactory> */
     use HasFactory;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

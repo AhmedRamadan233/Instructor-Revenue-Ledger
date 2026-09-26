@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\SubscriptionPaymentStatus;
+use App\Models\Scopes\SubscriptionPaymentAccessScope;
 use Database\Factories\SubscriptionPaymentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ScopedBy([SubscriptionPaymentAccessScope::class])]
 #[Fillable([
     'subscription_id',
     'amount',
@@ -20,12 +23,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class SubscriptionPayment extends Model
 {
-    /** @use HasFactory<SubscriptionPaymentFactory> */
     use HasFactory;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

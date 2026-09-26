@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Enums\CourseStatus;
+use App\Models\Scopes\CourseAccessScope;
 use Database\Factories\CourseFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ScopedBy([CourseAccessScope::class])]
 #[Fillable([
     'teacher_id',
     'title',
@@ -18,12 +21,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Course extends Model
 {
-    /** @use HasFactory<CourseFactory> */
     use HasFactory;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
