@@ -49,6 +49,14 @@
                             Courses for Students
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a
+                            class="nav-link @if (request()->routeIs('guest.login')) active @endif"
+                            href="{{ route('guest.login') }}"
+                        >
+                            Login
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

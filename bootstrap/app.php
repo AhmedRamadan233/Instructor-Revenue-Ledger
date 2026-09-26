@@ -43,6 +43,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'teacher' => EnsureUserIsTeacher::class,
             'role.guest' => EnsureUserIsGuest::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn () => route('guest.login'));
+        $middleware->redirectUsersTo(function () {
+            $user = auth()->user();
+
+            return $user
+                ? route($user->dashboardRouteName())
+                : route('guest.home');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

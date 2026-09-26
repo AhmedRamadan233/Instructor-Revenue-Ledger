@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -59,5 +58,15 @@ class User extends Authenticatable
         return Attribute::get(
             fn (): bool => $this->manager()->withoutGlobalScopes()->exists()
         )->shouldCache();
+    }
+
+    public function dashboardRouteName(): string
+    {
+        return match (true) {
+            $this->is_manager => 'dashboard.home',
+            $this->is_teacher => 'teacher.home',
+            $this->is_student => 'student.home',
+            default => 'guest.home',
+        };
     }
 }

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             StudentSeeder::class,
             PlanSeeder::class,
             CourseSeeder::class,
+            SubscriptionSeeder::class,
         ]);
     }
 }

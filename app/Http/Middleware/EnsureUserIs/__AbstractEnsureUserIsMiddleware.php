@@ -13,12 +13,17 @@ abstract class __AbstractEnsureUserIsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $this->allows($request)) {
-            abort(403);
+        if ($this->allows($request)) {
+            return $next($request);
         }
 
-        return $next($request);
+        return $this->deny($request);
     }
 
     abstract protected function allows(Request $request): bool;
+
+    protected function deny(Request $request): Response
+    {
+        abort(403);
+    }
 }
