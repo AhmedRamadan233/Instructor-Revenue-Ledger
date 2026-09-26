@@ -42,17 +42,28 @@ class Revenue extends __AbstractManagerComponent
 
     public function process(ProcessRevenuePeriod $processor): void
     {
+        $this->runProcess($processor, force: false);
+    }
+
+    public function processForDemo(ProcessRevenuePeriod $processor): void
+    {
+        $this->runProcess($processor, force: true);
+    }
+
+    protected function runProcess(ProcessRevenuePeriod $processor, bool $force): void
+    {
         $this->validate(ProcessRevenueRequest::rules());
 
         $periodStart = Carbon::create($this->year, $this->month, 1)->startOfMonth();
         $periodEnd = $periodStart->copy()->endOfMonth();
 
-        $result = $processor->handle($periodStart, $periodEnd);
+        $result = $processor->handle($periodStart, $periodEnd, force: $force);
 
         session()->flash(
             'success',
             sprintf(
-                'Period %s processed: %d allocations, %d ledger entries, %d subscriptions carried forward (no watch time).',
+                '%s%s processed: %d allocations, %d ledger entries, %d subscriptions carried forward (no watch time).',
+                $force ? '[Demo re-run] ' : '',
                 $periodStart->format('Y-m'),
                 $result['allocations'],
                 $result['ledger_entries'],
@@ -70,6 +81,7 @@ class Revenue extends __AbstractManagerComponent
             ),
             'allocationsCount' => $this->allocations->count(withoutGlobalScopes: true),
             'ledgerCount' => $this->ledgerEntries->count(withoutGlobalScopes: true),
+            'showDemoProcess' => ! app()->isProduction(),
         ]);
     }
 }

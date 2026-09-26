@@ -52,15 +52,39 @@
                     <input id="revenue-month" type="number" min="1" max="12" class="form-control @error('month') is-invalid @enderror" wire:model="month">
                     @error('month') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                <div class="col-md-6 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="process,processForDemo">
                         <span wire:loading.remove wire:target="process">Process period</span>
                         <span wire:loading wire:target="process">Processing...</span>
                     </button>
+
+                    @if ($showDemoProcess)
+                        <button
+                            type="button"
+                            class="btn btn-outline-warning"
+                            wire:click="processForDemo"
+                            wire:loading.attr="disabled"
+                            wire:target="process,processForDemo"
+                            title="Skips already-processed and unfinished-month checks. Rebuilds allocations for this month."
+                        >
+                            <span wire:loading.remove wire:target="processForDemo">Process (demo / re-run)</span>
+                            <span wire:loading wire:target="processForDemo">Re-running...</span>
+                        </button>
+                    @endif
                 </div>
             </form>
+
+            @if ($showDemoProcess)
+                <p class="text-warning small mt-2 mb-0">
+                    <strong>Demo button:</strong> skips “already processed” and “month not finished yet” locks so you can re-run the same month while recording. Still rebuilds that month’s allocations/earnings from current watch data.
+                </p>
+            @endif
+
             @error('period')
-                <div class="alert alert-danger mt-3 mb-0">{{ $message }}</div>
+                <div class="alert alert-danger mt-3 mb-0" role="alert">
+                    <div class="fw-semibold mb-1">Could not process this period</div>
+                    <div>{{ $message }}</div>
+                </div>
             @enderror
         </div>
     </div>

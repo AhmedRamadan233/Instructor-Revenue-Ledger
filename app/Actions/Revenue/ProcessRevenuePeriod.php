@@ -35,14 +35,17 @@ class ProcessRevenuePeriod
      *     carried_forward: int
      * }
      */
-    public function handle(CarbonInterface $periodStart, CarbonInterface $periodEnd): array
-    {
+    public function handle(
+        CarbonInterface $periodStart,
+        CarbonInterface $periodEnd,
+        bool $force = false,
+    ): array {
         $periodStart = $periodStart->copy()->startOfDay();
         $periodEnd = $periodEnd->copy()->endOfDay();
 
-        $this->assertCloseableCalendarMonth($periodStart, $periodEnd);
+        $this->assertCloseableCalendarMonth($periodStart, $periodEnd, $force);
 
-        return DB::transaction(function () use ($periodStart, $periodEnd): array {
+        return DB::transaction(function () use ($periodStart, $periodEnd, $force): array {
             $period = $this->periods->query(true)
                 ->whereDate('period_start', $periodStart->toDateString())
                 ->whereDate('period_end', $periodEnd->toDateString())
@@ -56,10 +59,32 @@ class ProcessRevenuePeriod
                 ]);
             }
 
-            if ($period->status === RevenuePeriodStatus::Processed) {
+            if ($period->status === RevenuePeriodStatus::Processed && ! $force) {
+                $label = $periodStart->format('F Y');
+                $range = sprintf(
+                    '%s → %s',
+                    $periodStart->toDateString(),
+                    $periodEnd->toDateString(),
+                );
+                $processedAt = optional($period->processed_at)->format('Y-m-d H:i') ?? 'unknown time';
+
                 throw ValidationException::withMessages([
-                    'period' => 'This revenue period has already been processed.',
+                    'period' => sprintf(
+                        'Cannot process %s (%s): this period is already locked as Processed (at %s). Re-running would duplicate earnings unless you use the demo re-run button, which rebuilds allocations for this month only.',
+                        $label,
+                        $range,
+                        $processedAt,
+                    ),
                 ]);
+            }
+
+            if ($force && $period->status === RevenuePeriodStatus::Processed) {
+                $this->periods->update($period->id, [
+                    'status' => RevenuePeriodStatus::Open,
+                    'processed_at' => null,
+                ], withoutGlobalScopes: true);
+
+                $period->refresh();
             }
 
             $this->allocations->deleteWhere(
@@ -135,10 +160,15 @@ class ProcessRevenuePeriod
     protected function assertCloseableCalendarMonth(
         CarbonInterface $periodStart,
         CarbonInterface $periodEnd,
+        bool $force = false,
     ): void {
         if ($periodEnd->lt($periodStart)) {
             throw ValidationException::withMessages([
-                'period' => 'Period end must be after period start.',
+                'period' => sprintf(
+                    'Invalid range: end date (%s) is before start date (%s).',
+                    $periodEnd->toDateString(),
+                    $periodStart->toDateString(),
+                ),
             ]);
         }
 
@@ -151,15 +181,31 @@ class ProcessRevenuePeriod
             || ! $periodStart->isSameMonth($periodEnd)
         ) {
             throw ValidationException::withMessages([
-                'period' => 'Revenue periods must cover a full calendar month.',
+                'period' => sprintf(
+                    'Revenue periods must be a full calendar month (expected %s → %s, got %s → %s).',
+                    $expectedStart->toDateString(),
+                    $expectedEnd->toDateString(),
+                    $periodStart->toDateString(),
+                    $periodEnd->toDateString(),
+                ),
             ]);
         }
 
-        $latestCloseable = now()->copy()->subMonthNoOverflow()->format('Y-m');
+        if ($force) {
+            return;
+        }
 
-        if ($periodStart->format('Y-m') > $latestCloseable) {
+        $latestCloseable = now()->copy()->subMonthNoOverflow();
+        $requested = $periodStart->copy()->startOfMonth();
+
+        if ($requested->format('Y-m') > $latestCloseable->format('Y-m')) {
             throw ValidationException::withMessages([
-                'period' => 'Only fully completed months can be processed. Wait until the month ends.',
+                'period' => sprintf(
+                    'Cannot process %s yet: only finished months can be closed. Latest allowed month is %s (today is %s). Wait until this month ends, or use the demo re-run button for a test pass.',
+                    $requested->format('F Y'),
+                    $latestCloseable->format('F Y'),
+                    now()->toDateString(),
+                ),
             ]);
         }
     }
