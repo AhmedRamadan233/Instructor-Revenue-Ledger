@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\SubscriptionStatus;
-use App\Models\Scopes\BelongsToAuthenticatedStudentScope;
-use Database\Factories\SubscriptionFactory;
+use App\Models\Scopes\Global\BelongsToAuthenticatedStudentScope;
+use App\Models\Scopes\Local\SubscriptionScopes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,12 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Subscription extends Model
 {
-    /** @use HasFactory<SubscriptionFactory> */
-    use HasFactory;
+    use HasFactory, SubscriptionScopes;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

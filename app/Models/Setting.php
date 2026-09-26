@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SettingType;
-use App\Models\Scopes\ManagerOnlyScope;
+use App\Models\Scopes\Global\ManagerOnlyScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['key', 'value', 'type'])]
 class Setting extends Model
 {
-
     protected function casts(): array
     {
         return [

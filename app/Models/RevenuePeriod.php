@@ -3,8 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RevenuePeriodStatus;
-use App\Models\Scopes\RevenuePeriodAccessScope;
-use Database\Factories\RevenuePeriodFactory;
+use App\Models\Scopes\Global\RevenuePeriodAccessScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class RevenuePeriod extends Model
 {
     use HasFactory;
-    
+
     protected function casts(): array
     {
         return [

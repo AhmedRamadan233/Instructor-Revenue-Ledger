@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\ManagerProfileScope;
-use Database\Factories\ManagerFactory;
+use App\Models\Scopes\Global\ManagerProfileScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

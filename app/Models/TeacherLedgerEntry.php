@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\LedgerEntryType;
-use App\Models\Scopes\BelongsToAuthenticatedTeacherScope;
-use Database\Factories\TeacherLedgerEntryFactory;
+use App\Models\Scopes\Global\BelongsToAuthenticatedTeacherScope;
+use App\Models\Scopes\Local\TeacherLedgerEntryScopes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 ])]
 class TeacherLedgerEntry extends Model
 {
-    use HasFactory;
+    use HasFactory ,TeacherLedgerEntryScopes;
 
     public const UPDATED_AT = null;
 

@@ -13,14 +13,15 @@ class Home extends __AbstractTeacherComponent
     public function render()
     {
         return view('livewire.teachers.home', [
-            'courses' => Course::query()->latest()->get(),
-            'allocations' => RevenueAllocation::query()
-                ->with(['revenuePeriod', 'subscription'])
-                ->latest()
-                ->get(),
-            'ledgerEntries' => TeacherLedgerEntry::query()
+            'coursesCount' => Course::query()->count(),
+            'allocationsCount' => RevenueAllocation::query()->count(),
+            'ledgerCount' => TeacherLedgerEntry::query()->count(),
+            'totalAllocated' => (float) RevenueAllocation::query()->sum('allocated_amount'),
+            'recentCourses' => Course::query()->latest()->limit(3)->get(),
+            'recentAllocations' => RevenueAllocation::query()
                 ->with('revenuePeriod')
-                ->latest('created_at')
+                ->latest()
+                ->limit(3)
                 ->get(),
         ]);
     }

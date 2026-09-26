@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Models\Scopes;
+namespace App\Models\Scopes\Global;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class SubscriptionPaymentAccessScope extends __AbstractScope
+class BelongsToAuthenticatedStudentScope extends __AbstractScope
 {
+    public function __construct(protected string $column = 'student_id') {}
+
     protected function constrain(Builder $builder, Model $model): void
     {
         $studentId = $this->requireStudentId($builder);
@@ -15,9 +17,6 @@ class SubscriptionPaymentAccessScope extends __AbstractScope
             return;
         }
 
-        $builder->whereHas('subscription', function (Builder $query) use ($studentId): void {
-            $query->withoutGlobalScopes()
-                ->where('student_id', $studentId);
-        });
+        $builder->where($model->qualifyColumn($this->column), $studentId);
     }
 }

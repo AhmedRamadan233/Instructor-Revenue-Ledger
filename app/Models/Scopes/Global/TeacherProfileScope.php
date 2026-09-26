@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Scopes;
+namespace App\Models\Scopes\Global;
 
 use App\Support\AuthActor;
 use Illuminate\Database\Eloquent\Builder;

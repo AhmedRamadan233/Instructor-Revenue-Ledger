@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\CourseConsumptionSessionAccessScope;
-use Database\Factories\CourseConsumptionSessionFactory;
+use App\Models\Scopes\Global\CourseConsumptionSessionAccessScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -3,8 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SubscriptionPaymentStatus;
-use App\Models\Scopes\SubscriptionPaymentAccessScope;
-use Database\Factories\SubscriptionPaymentFactory;
+use App\Models\Scopes\Global\SubscriptionPaymentAccessScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

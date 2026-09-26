@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\TeacherProfileScope;
-use Database\Factories\TeacherFactory;
+use App\Models\Scopes\Global\TeacherProfileScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

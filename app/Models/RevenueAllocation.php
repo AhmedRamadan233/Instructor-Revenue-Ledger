@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\BelongsToAuthenticatedTeacherScope;
-use Database\Factories\RevenueAllocationFactory;
+use App\Models\Scopes\Global\BelongsToAuthenticatedTeacherScope;
+use App\Models\Scopes\Local\RevenueAllocationScopes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class RevenueAllocation extends Model
 {
-    use HasFactory;
+    use HasFactory, RevenueAllocationScopes;
 
     protected function casts(): array
     {

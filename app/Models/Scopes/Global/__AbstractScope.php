@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Scopes;
+namespace App\Models\Scopes\Global;
 
 use App\Models\User;
 use App\Support\AuthActor;
@@ -37,12 +37,10 @@ abstract class __AbstractScope implements Scope
         $constrain($builder, $model, $user);
     }
 
-
     protected function deny(Builder $builder): void
     {
         $builder->whereRaw('0 = 1');
     }
-
 
     protected function requireStudentId(Builder $builder): ?int
     {
@@ -62,7 +60,6 @@ abstract class __AbstractScope implements Scope
 
         return $studentId;
     }
-
 
     protected function requireTeacherId(Builder $builder): ?int
     {
